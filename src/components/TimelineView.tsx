@@ -65,6 +65,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   }, [openBacklogPopover, isFilterDropdownOpen, isProjectFilterDropdownOpen]);
   const [draggedItem, setDraggedItem] = useState<WorkItem | null>(null);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [ghostItem, setGhostItem] = useState<{ workItem: WorkItem; x: number; y: number } | null>(null);
+  const [dragTimeout, setDragTimeout] = useState<number | null>(null);
 
 
   const weeks = getAllWeeksInYear(new Date().getFullYear()); // All 52 weeks of the year
@@ -210,54 +212,64 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const handleDragStart = (e: React.DragEvent | React.MouseEvent, workItem: WorkItem, workItemX?: number) => {
     setDraggedItem(workItem);
     
-    // If it's a mouse event (timeline items), start mouse-based dragging
+    // If it's a mouse event (timeline items), start 2-second hold timer
     if (e.type === 'mousedown') {
       const mouseEvent = e as React.MouseEvent;
       mouseEvent.preventDefault();
       mouseEvent.stopPropagation();
       
-      const svg = svgRef.current;
-      if (!svg) return;
-      
-      const containerRect = containerRef.current?.getBoundingClientRect();
-      if (!containerRect) return;
-      
-      // Calculate the initial click position relative to the work item
-      // This represents where within the work item the user clicked
-      const clickOffsetX = workItemX !== undefined 
-        ? mouseEvent.clientX - (containerRect.left + workItemX + (containerRef.current?.scrollLeft || 0))
-        : 0;
-      
-      // Add visual feedback
-      document.body.style.cursor = 'grabbing';
-      
-      const handleMouseMove = (moveEvent: MouseEvent) => {
-        const containerRect = containerRef.current?.getBoundingClientRect();
-        if (!containerRect) return;
+      // Start 2-second timer for hold-to-drag
+      const timeout = window.setTimeout(() => {
+        // Remove item from timeline and create ghost
+        setGhostItem({ workItem, x: mouseEvent.clientX, y: mouseEvent.clientY });
+        setDraggedItem(null); // Remove from timeline
         
-        // Calculate the mouse position relative to the container
-        const mouseX = moveEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
+        // Add visual feedback
+        document.body.style.cursor = 'grabbing';
         
-        // Calculate the target position for the work item so that the click point stays under the mouse
-        const targetX = mouseX - clickOffsetX;
-        const weekIndex = Math.floor((targetX - backlogColumnWidth) / weekWidth);
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+          setGhostItem(prev => prev ? { ...prev, x: moveEvent.clientX, y: moveEvent.clientY } : null);
+        };
         
-        // Prevent dragging beyond the timeline bounds
-        if (targetX > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
-          const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
-          onWorkItemMove(workItem.id, newStartDate);
-        }
-      };
+        const handleMouseUp = () => {
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+          document.body.style.cursor = '';
+          
+          // Handle drop
+          if (ghostItem) {
+            const containerRect = containerRef.current?.getBoundingClientRect();
+            if (containerRect) {
+              const x = ghostItem.x - containerRect.left + (containerRef.current?.scrollLeft || 0);
+              const timelineX = x - backlogColumnWidth;
+              const weekIndex = Math.floor(timelineX / weekWidth);
+              
+              if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
+                const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+                onWorkItemMove(ghostItem.workItem.id, newStartDate);
+              }
+            }
+          }
+          
+          setGhostItem(null);
+        };
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+      }, 2000); // 2 seconds
       
+      setDragTimeout(timeout);
+      
+      // Add mouse up handler to cancel drag if released before 2 seconds
       const handleMouseUp = () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        document.body.style.cursor = '';
+        if (dragTimeout) {
+          clearTimeout(dragTimeout);
+          setDragTimeout(null);
+        }
         setDraggedItem(null);
       };
       
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mouseup', handleMouseUp, { once: true });
       return;
     }
     
@@ -349,8 +361,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   useEffect(() => {
     return () => {
       setDraggedItem(null);
+      setGhostItem(null);
+      if (dragTimeout) {
+        clearTimeout(dragTimeout);
+      }
     };
-  }, []);
+  }, [dragTimeout]);
 
 
 
@@ -612,19 +628,54 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                   ? 'bg-red-50 border-red-300 hover:bg-red-100' 
                                   : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
                               }`}
-                              draggable
-                              onDragStart={(e) => {
-                                // Add 2 second delay for drag start
+                              onMouseDown={(e) => {
+                                // Start 2-second timer for hold-to-drag
                                 e.preventDefault();
-                                const timeout = setTimeout(() => {
-                                  handleDragStart(e, workItem);
-                                }, 1000);
+                                e.stopPropagation();
                                 
-                                // Store timeout reference to clear if needed
+                                const timeout = window.setTimeout(() => {
+                                  // Create ghost item for backlog items
+                                  setGhostItem({ workItem, x: e.clientX, y: e.clientY });
+                                  
+                                  // Add visual feedback
+                                  document.body.style.cursor = 'grabbing';
+                                  
+                                  const handleMouseMove = (moveEvent: MouseEvent) => {
+                                    setGhostItem(prev => prev ? { ...prev, x: moveEvent.clientX, y: moveEvent.clientY } : null);
+                                  };
+                                  
+                                  const handleMouseUp = () => {
+                                    document.removeEventListener('mousemove', handleMouseMove);
+                                    document.removeEventListener('mouseup', handleMouseUp);
+                                    document.body.style.cursor = '';
+                                    
+                                    // Handle drop
+                                    if (ghostItem) {
+                                      const containerRect = containerRef.current?.getBoundingClientRect();
+                                      if (containerRect) {
+                                        const x = ghostItem.x - containerRect.left + (containerRef.current?.scrollLeft || 0);
+                                        const timelineX = x - backlogColumnWidth;
+                                        const weekIndex = Math.floor(timelineX / weekWidth);
+                                        
+                                        if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
+                                          const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+                                          onWorkItemMove(ghostItem.workItem.id, newStartDate);
+                                        }
+                                      }
+                                    }
+                                    
+                                    setGhostItem(null);
+                                  };
+                                  
+                                  document.addEventListener('mousemove', handleMouseMove);
+                                  document.addEventListener('mouseup', handleMouseUp);
+                                }, 2000); // 2 seconds
+                                
+                                // Store timeout reference
                                 (e.target as any).dragTimeout = timeout;
                               }}
-                              onDragEnd={(e) => {
-                                // Clear timeout if drag ends early
+                              onMouseUp={(e) => {
+                                // Cancel drag if released before 2 seconds
                                 if ((e.target as any).dragTimeout) {
                                   clearTimeout((e.target as any).dragTimeout);
                                   (e.target as any).dragTimeout = null;
@@ -1068,6 +1119,20 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
             })()}
           </g>
         </svg>
+        
+        {/* Ghost Item for Drag and Drop */}
+        {ghostItem && (
+          <div
+            className="fixed pointer-events-none z-50 bg-blue-500 text-white px-3 py-1 rounded shadow-lg opacity-80"
+            style={{
+              left: ghostItem.x + 10,
+              top: ghostItem.y - 20,
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            {ghostItem.workItem.name}
+          </div>
+        )}
       </div>
     </div>
   </div>
