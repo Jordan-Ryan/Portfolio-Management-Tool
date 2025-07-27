@@ -28,19 +28,27 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   onAcknowledgeDependency
 }) => {
   const [openBacklogPopover, setOpenBacklogPopover] = useState<string | null>(null);
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Close popover when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
+      // Handle backlog popover
       if (openBacklogPopover) {
-        const target = event.target as Element;
         // Don't close if clicking on the alert icon or the popover itself
         if (target.closest('[data-alert-popover]') || target.closest('[data-alert-icon]')) {
           return;
         }
         setOpenBacklogPopover(null);
+      }
+      
+      // Handle filter dropdown
+      if (isFilterDropdownOpen && !target.closest('[data-filter-dropdown]')) {
+        setIsFilterDropdownOpen(false);
       }
     };
 
@@ -48,7 +56,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openBacklogPopover]);
+  }, [openBacklogPopover, isFilterDropdownOpen]);
   const [draggedItem, setDraggedItem] = useState<WorkItem | null>(null);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
@@ -327,24 +335,62 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
             </p>
           </div>
           
-          {/* PDT Filter Dropdown */}
+          {/* PDT Filter Multi-Select */}
           <div className="flex items-center space-x-2">
-            <label htmlFor="pdt-filter" className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-gray-700">
               Filter by PDT:
             </label>
-            <select
-              id="pdt-filter"
-              value={selectedPDTFilter.length > 0 ? selectedPDTFilter[0] : ''}
-              onChange={(e) => onPDTFilterChange(e.target.value ? [e.target.value] : [])}
-              className="block w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">All PDT Teams</option>
-              {pdtTeams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative" data-filter-dropdown>
+              <button
+                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                className="flex items-center justify-between w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              >
+                <span className="truncate">
+                  {selectedPDTFilter.length === 0 
+                    ? 'All PDT Teams' 
+                    : selectedPDTFilter.length === 1
+                    ? pdtTeams.find(t => t.id === selectedPDTFilter[0])?.name
+                    : `${selectedPDTFilter.length} teams selected`
+                  }
+                </span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {isFilterDropdownOpen && (
+                <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  <div className="p-2">
+                    <label className="flex items-center p-2 hover:bg-gray-50 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedPDTFilter.length === 0}
+                        onChange={() => onPDTFilterChange([])}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">All PDT Teams</span>
+                    </label>
+                    {pdtTeams.map((team) => (
+                      <label key={team.id} className="flex items-center p-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedPDTFilter.includes(team.id)}
+                          onChange={() => {
+                            if (selectedPDTFilter.includes(team.id)) {
+                              onPDTFilterChange(selectedPDTFilter.filter(id => id !== team.id));
+                            } else {
+                              onPDTFilterChange([...selectedPDTFilter, team.id]);
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{team.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
