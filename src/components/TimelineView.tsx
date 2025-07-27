@@ -238,12 +238,14 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         const containerRect = containerRef.current?.getBoundingClientRect();
         if (!containerRect) return;
         
-        // Calculate position relative to the scrollable container, accounting for scroll
-        // Subtract the click offset to make the drag relative to where you clicked
-        const x = moveEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0) - clickOffsetX;
-        const weekIndex = Math.floor((x - backlogColumnWidth) / weekWidth);
+        // Calculate the mouse position relative to the container
+        const mouseX = moveEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
         
-        if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
+        // Calculate the target position for the work item so that the click point stays under the mouse
+        const targetX = mouseX - clickOffsetX;
+        const weekIndex = Math.floor((targetX - backlogColumnWidth) / weekWidth);
+        
+        if (targetX > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
           const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
           onWorkItemMove(workItem.id, newStartDate);
         }
