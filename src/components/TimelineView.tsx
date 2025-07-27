@@ -225,6 +225,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       const containerRect = containerRef.current?.getBoundingClientRect();
       if (!containerRect) return;
       
+      // Calculate the initial click position relative to the work item
+      const workItemElement = mouseEvent.currentTarget as SVGGElement;
+      const workItemRect = workItemElement.getBoundingClientRect();
+      const clickOffsetX = mouseEvent.clientX - workItemRect.left;
+      
       // Add visual feedback
       document.body.style.cursor = 'grabbing';
       
@@ -233,7 +238,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         if (!containerRect) return;
         
         // Calculate position relative to the scrollable container, accounting for scroll
-        const x = moveEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
+        // Subtract the click offset to make the drag relative to where you clicked
+        const x = moveEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0) - clickOffsetX;
         const weekIndex = Math.floor((x - backlogColumnWidth) / weekWidth);
         
         if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
@@ -271,9 +277,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (!containerRect) return;
     
-    // Calculate position relative to the scrollable container, accounting for scroll
+    // For HTML5 drag and drop (backlog items), we don't have the click offset
+    // so we'll center the work item on the drop position
     const x = e.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
-    const y = e.clientY - containerRect.top + (containerRef.current?.scrollTop || 0);
     
     // Calculate week index from x position (accounting for backlog column)
     const weekIndex = Math.floor((x - backlogColumnWidth) / weekWidth);
