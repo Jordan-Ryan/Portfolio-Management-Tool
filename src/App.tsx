@@ -43,7 +43,7 @@ function App() {
 
   const handleWorkItemMove = (workItemId: string, newStartDate: Date) => {
     setWorkItems(prev => {
-      const updatedItems = prev.map(item => {
+      return prev.map(item => {
         if (item.id === workItemId) {
           const newEndDate = addWeeks(newStartDate, item.duration);
           return {
@@ -54,14 +54,6 @@ function App() {
           };
         }
         return item;
-      });
-      
-      // Sort items by start date to maintain proper order
-      return updatedItems.sort((a, b) => {
-        if (!a.startDate && !b.startDate) return 0;
-        if (!a.startDate) return 1;
-        if (!b.startDate) return 0;
-        return a.startDate.getTime() - b.startDate.getTime();
       });
     });
   };
