@@ -7,7 +7,10 @@ export const getWeekRange = (date: Date) => {
 };
 
 export const getWeekIndex = (date: Date, baseDate: Date) => {
-  return differenceInWeeks(date, baseDate);
+  // Get the start of the week for the given date
+  const { start: weekStart } = getWeekRange(date);
+  // Calculate the difference in weeks from the base date
+  return differenceInWeeks(weekStart, baseDate);
 };
 
 export const getDateFromWeekIndex = (weekIndex: number, baseDate: Date) => {
