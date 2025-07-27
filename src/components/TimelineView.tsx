@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { WorkItem, Project, PDTTeam } from '../types';
 import { TimelineBar } from './TimelineBar';
 import { getAllWeeksInYear, getWeekIndex, getDateFromWeekIndex, getWeekOffset } from '../utils/dateUtils';
-import { getWorkItemsByProject, sortWorkItemsByPDTAndRow, checkDependencyConflict, getDependencyConflictDetails } from '../utils/calculations';
+import { getWorkItemsByProject, sortWorkItemsByPDTAndRow, checkDependencyConflict, getDependencyConflictDetails, calculateProgressDelay, getProgressDelayDetails } from '../utils/calculations';
 
 interface TimelineViewProps {
   workItems: WorkItem[];
@@ -1169,22 +1169,171 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
             width = startWeekWidth + (fullWeeks * weekWidth) + endWeekWidth;
           }
           
+          // Get PDT team for the work item
+          const pdtTeam = getPDTTeam(workItem.pdtTeamId);
+          
+          // Calculate progress and colors (same as TimelineBar)
+          const progressWidth = (workItem.completedPercentage / 100) * width;
+          const progressColor = workItem.completedPercentage === 100 
+            ? '#22c55e' 
+            : workItem.completedPercentage > 50 
+            ? '#3b82f6' 
+            : '#f59e0b';
+          
+          // Check for alerts (same as TimelineBar)
+          const hasDependencyConflict = checkDependencyConflict(workItem, workItems);
+          const progressDelayDetails = getProgressDelayDetails(workItem);
+          
+          const currentDate = new Date();
+          const isFutureWork = workItem.startDate && workItem.startDate > currentDate;
+          const isPastWork = workItem.endDate && workItem.endDate < currentDate;
+          const isCurrentWork = workItem.startDate && workItem.endDate && workItem.startDate <= currentDate && workItem.endDate >= currentDate;
+          const isBacklogItem = workItem.isInBacklog;
+          
+          const hasFutureCompletion = isFutureWork && workItem.completedPercentage > 0;
+          const hasBacklogCompletion = isBacklogItem && workItem.completedPercentage > 0;
+          const hasPastIncomplete = isPastWork && workItem.completedPercentage < 100;
+          const hasDelay = isCurrentWork && calculateProgressDelay(workItem);
+          
+          const hasAlert = hasDelay || hasDependencyConflict || hasFutureCompletion || hasBacklogCompletion || hasPastIncomplete;
+          
+          // Helper function to truncate text (same as TimelineBar)
+          const truncateText = (text: string, maxWidth: number, fontSize: number = 12) => {
+            const charWidth = fontSize * 0.55;
+            const maxChars = Math.floor(maxWidth / charWidth);
+            
+            if (text.length <= maxChars) {
+              return text;
+            }
+            
+            const ellipsisChars = 3;
+            const availableChars = Math.max(0, maxChars - ellipsisChars);
+            
+            if (availableChars <= 0) {
+              return '...';
+            }
+            
+            return text.substring(0, availableChars) + '...';
+          };
+          
           return (
-            <div
-              className="fixed pointer-events-none z-50 bg-blue-500 text-white px-3 py-1 rounded shadow-lg opacity-80"
+            <svg
+              className="fixed pointer-events-none z-50"
               style={{
                 left: ghostItem.x,
-                top: ghostItem.y - 20,
+                top: ghostItem.y - barHeight / 2,
                 width: `${width}px`,
-                transform: 'translate(0, -50%)',
+                height: `${barHeight}px`,
                 userSelect: 'none',
                 WebkitUserSelect: 'none',
                 MozUserSelect: 'none',
                 msUserSelect: 'none'
               }}
             >
-              {workItem.name}
-            </div>
+              {/* Background bar */}
+              <rect
+                width={width}
+                height={barHeight}
+                rx={4}
+                fill="#f3f4f6"
+                stroke="#d1d5db"
+                strokeWidth={1}
+                opacity={0.9}
+              />
+              
+              {/* Progress fill */}
+              <rect
+                width={Math.max(progressWidth, 0)}
+                height={barHeight}
+                rx={4}
+                fill={progressColor}
+                opacity={0.8}
+              />
+              
+              {/* Border for delayed items */}
+              {hasDelay && (
+                <rect
+                  width={width}
+                  height={barHeight}
+                  rx={4}
+                  fill="none"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  strokeDasharray="4"
+                />
+              )}
+              
+              {/* Border for dependency conflicts */}
+              {hasDependencyConflict && (
+                <rect
+                  width={width}
+                  height={barHeight}
+                  rx={4}
+                  fill="none"
+                  stroke="#dc2626"
+                  strokeWidth={2}
+                />
+              )}
+              
+              {/* Border for past incomplete items */}
+              {hasPastIncomplete && (
+                <rect
+                  width={width}
+                  height={barHeight}
+                  rx={4}
+                  fill="none"
+                  stroke="#dc2626"
+                  strokeWidth={2}
+                  strokeDasharray="6"
+                />
+              )}
+              
+              {/* Text content */}
+              <text
+                x={hasAlert ? 25 : 8}
+                y={barHeight / 2 + 4}
+                fontSize={12}
+                fill="#374151"
+                className="font-medium"
+              >
+                {truncateText(workItem.name, width - (hasAlert ? 25 : 8) - 8, 12)}
+              </text>
+              
+              {/* PDT Team name */}
+              <text
+                x={hasAlert ? 25 : 8}
+                y={barHeight - 4}
+                fontSize={10}
+                fill="#6b7280"
+              >
+                {truncateText(`${pdtTeam?.name || 'Unknown'} • ${workItem.capacity}% • ${workItem.duration}w`, width - (hasAlert ? 25 : 8) - 8, 10)}
+              </text>
+              
+              {/* Progress percentage */}
+              <text
+                x={width - 8}
+                y={barHeight / 2 + 4}
+                fontSize={11}
+                fill="#374151"
+                textAnchor="end"
+                className="font-medium"
+              >
+                {truncateText(`${workItem.completedPercentage}%`, 40, 11)}
+              </text>
+              
+              {/* Alert indicator */}
+              {hasAlert && (
+                <text
+                  x={8}
+                  y={barHeight / 2 + 4}
+                  fontSize={12}
+                  fill="#ef4444"
+                  className="font-bold"
+                >
+                  ⚠️
+                </text>
+              )}
+            </svg>
           );
         })()}
       </div>
