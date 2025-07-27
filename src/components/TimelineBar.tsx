@@ -93,7 +93,7 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
           const timeout = window.setTimeout(() => {
             setIsDragging(true);
             onDragStart(e as any, workItem, x);
-          }, 2000); // 2 second delay
+          }, 1000); // 1 second delay
           setDragTimeout(timeout);
         }
       }}

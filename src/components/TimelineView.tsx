@@ -226,7 +226,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       if (!containerRect) return;
       
       // Calculate the initial click position relative to the work item
-      // Use the work item's x position if provided, otherwise use a simple offset
+      // This represents where within the work item the user clicked
       const clickOffsetX = workItemX !== undefined 
         ? mouseEvent.clientX - (containerRect.left + workItemX)
         : 0;
@@ -579,7 +579,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                 e.preventDefault();
                                 const timeout = setTimeout(() => {
                                   handleDragStart(e, workItem);
-                                }, 2000);
+                                }, 1000);
                                 
                                 // Store timeout reference to clear if needed
                                 (e.target as any).dragTimeout = timeout;
