@@ -1,7 +1,6 @@
 import { Project, PDTTeam, WorkItem } from '../types';
 import { addWeeks, subWeeks } from 'date-fns';
 
-const baseDate = new Date();
 const currentDate = new Date();
 
 export const sampleProjects: Project[] = [

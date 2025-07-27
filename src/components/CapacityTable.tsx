@@ -149,7 +149,6 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
                     const percentage = getCapacityPercentage(team, weekIndex);
                     const overflowText = getOverflowText(percentage, team.maxCapacity);
                     const isOverCapacity = percentage > team.maxCapacity;
-                    const isUnderCapacity = percentage < team.maxCapacity;
                     
                     return (
                       <td key={weekIndex} className="px-2 py-3 text-center border-r border-gray-200">

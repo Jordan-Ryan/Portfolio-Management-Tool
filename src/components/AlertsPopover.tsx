@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Alert, WorkItem, PDTTeam } from '../types';
 import { AlertTriangle, Clock, Users, X } from 'lucide-react';
 

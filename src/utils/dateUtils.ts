@@ -58,13 +58,11 @@ export const getAllWeeksInYear = (year: number = new Date().getFullYear()): Week
 
 export const getWeeksAroundDate = (centerDate: Date = new Date(), weeksBefore: number = 6, weeksAfter: number = 6): WeekInfo[] => {
   const weeks: WeekInfo[] = [];
-  const totalWeeks = weeksBefore + weeksAfter + 1;
   
   for (let i = -weeksBefore; i <= weeksAfter; i++) {
     const weekDate = addWeeks(centerDate, i);
     const { start, end } = getWeekRange(weekDate);
     const weekNumber = getWeekNumber(start);
-    const year = start.getFullYear();
     
     weeks.push({
       index: i + weeksBefore,

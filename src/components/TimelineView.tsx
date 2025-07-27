@@ -1,10 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { WorkItem, Project, PDTTeam } from '../types';
 import { TimelineBar } from './TimelineBar';
 import { getAllWeeksInYear, getWeekIndex, getDateFromWeekIndex } from '../utils/dateUtils';
 import { getWorkItemsByProject, sortWorkItemsByPDTAndRow, checkDependencyConflict, getDependencyConflictDetails } from '../utils/calculations';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface TimelineViewProps {
   workItems: WorkItem[];
@@ -102,7 +100,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   // Calculate dimensions
   const weekWidth = 80; // Match capacity table week width
   const barHeight = 40;
-  const projectSpacing = 60;
   const itemSpacing = 10;
   const backlogColumnWidth = 300; // Match PDT Team (200px) + Max Capacity (100px) columns
   
