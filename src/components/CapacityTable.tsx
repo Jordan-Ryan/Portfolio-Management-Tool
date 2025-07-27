@@ -111,16 +111,18 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {pdtTeams.map((team) => {
-              const isSelected = selectedPDTFilter === team.id;
-              return (
-                <tr 
-                  key={team.id}
-                  className={`hover:bg-gray-50 cursor-pointer transition-colors ${
-                    isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                  }`}
-                  onClick={() => onPDTFilterChange(isSelected ? null : team.id)}
-                >
+            {pdtTeams
+              .filter(team => !selectedPDTFilter || selectedPDTFilter === team.id)
+              .map((team) => {
+                const isSelected = selectedPDTFilter === team.id;
+                return (
+                  <tr 
+                    key={team.id}
+                    className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                      isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                    }`}
+                    onClick={() => onPDTFilterChange(isSelected ? null : team.id)}
+                  >
                   <td className={`sticky left-0 z-10 px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-200 ${
                     isSelected ? 'bg-blue-50' : 'bg-white'
                   }`} style={{ width: '200px', minWidth: '200px' }}>
