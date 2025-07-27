@@ -83,47 +83,59 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const barHeight = 40;
   const projectSpacing = 60;
   const itemSpacing = 10;
-  const backlogHeight = 60; // Height for backlog section
   const backlogColumnWidth = 300; // Match PDT Team (200px) + Max Capacity (100px) columns
   
   const totalWidth = weeks.length * weekWidth; // Full width for timeline
   const viewportWidth = Math.max(1200, window.innerWidth - 100); // Responsive width
-  const totalHeight = projectGroups.reduce((height, group) => {
-    const isExpanded = expandedProjects.has(group.project.id);
-    const projectItems = getWorkItemsByProject(filteredWorkItems, group.project.id)
+  
+  // Function to calculate consistent project height for both timeline and backlog
+  const calculateProjectHeight = (projectId: string) => {
+    const isExpanded = expandedProjects.has(projectId);
+    const projectItems = getWorkItemsByProject(filteredWorkItems, projectId)
       .filter(item => !item.isInBacklog);
+    const projectBacklogItems = backlogItems.filter(item => item.projectId === projectId);
     
-                    if (!isExpanded) {
-                  // Collapsed project - header height + timeline info
-                  const hasTimelineInfo = projectItems.some(item => item.startDate && item.endDate);
-                  return height + (hasTimelineInfo ? 70 : 50); // Extra height for timeline info
-                }
+    let projectHeight = 50; // Base header height
     
-    // Expanded project - calculate work item rows using PDT-based organization
-    const sortedItems = sortWorkItemsByPDTAndRow(projectItems);
-    
-    // Group by PDT team to calculate rows
-    const pdtGroups: { [pdtTeamId: string]: WorkItem[] } = {};
-    
-    sortedItems.forEach(workItem => {
-      if (!workItem.startDate || !workItem.endDate) return;
+    if (isExpanded) {
+      const sortedItems = sortWorkItemsByPDTAndRow(projectItems);
+      const pdtGroups: { [pdtTeamId: string]: WorkItem[] } = {};
       
-      if (!pdtGroups[workItem.pdtTeamId]) {
-        pdtGroups[workItem.pdtTeamId] = [];
+      sortedItems.forEach(workItem => {
+        if (!workItem.startDate || !workItem.endDate) return;
+        if (!pdtGroups[workItem.pdtTeamId]) {
+          pdtGroups[workItem.pdtTeamId] = [];
+        }
+        pdtGroups[workItem.pdtTeamId].push(workItem);
+      });
+      
+      let totalWorkItems = 0;
+      Object.keys(pdtGroups).forEach(pdtTeamId => {
+        const pdtItems = pdtGroups[pdtTeamId];
+        totalWorkItems += pdtItems.length;
+      });
+      
+      // Add height for timeline work items
+      projectHeight += totalWorkItems * (barHeight + itemSpacing) + 20;
+    } else {
+      // Collapsed project - check if there are timeline items to show info
+      const hasTimelineInfo = projectItems.some(item => item.startDate && item.endDate);
+      if (hasTimelineInfo) {
+        projectHeight = 70; // Extra height for timeline info
       }
-      pdtGroups[workItem.pdtTeamId].push(workItem);
-    });
+    }
     
-    // Count total work items (each gets its own row)
-    let totalWorkItems = 0;
-    Object.keys(pdtGroups).forEach(pdtTeamId => {
-      const pdtItems = pdtGroups[pdtTeamId];
-      totalWorkItems += pdtItems.length;
-    });
+    // Add height for backlog items (if any) - this ensures both sections match
+    if (projectBacklogItems.length > 0) {
+      projectHeight += projectBacklogItems.length * 60 + 10; // 60px per backlog item + padding
+    }
     
-    const projectHeight = 50 + (totalWorkItems * (barHeight + itemSpacing)) + 20; // Header + items + padding
-    return height + projectHeight;
-  }, 100) + backlogHeight; // Add space for backlog
+    return projectHeight;
+  };
+  
+  const totalHeight = projectGroups.reduce((height, group) => {
+    return height + calculateProjectHeight(group.project.id) + 10; // Add spacing between projects
+  }, 100); // Start with 100px for header
 
   useEffect(() => {
     if (svgRef.current) {
@@ -311,43 +323,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 const projectBacklogItems = backlogItems.filter(item => item.projectId === group.project.id);
                 const isExpanded = expandedProjects.has(group.project.id);
                 
-                // Calculate project height to match timeline positioning
-                const projectItems = getWorkItemsByProject(filteredWorkItems, group.project.id)
-                  .filter(item => !item.isInBacklog);
-                
-                let projectHeight = 50; // Base header height
-                
-                if (isExpanded) {
-                  const sortedItems = sortWorkItemsByPDTAndRow(projectItems);
-                  const pdtGroups: { [pdtTeamId: string]: WorkItem[] } = {};
-                  
-                  sortedItems.forEach(workItem => {
-                    if (!workItem.startDate || !workItem.endDate) return;
-                    if (!pdtGroups[workItem.pdtTeamId]) {
-                      pdtGroups[workItem.pdtTeamId] = [];
-                    }
-                    pdtGroups[workItem.pdtTeamId].push(workItem);
-                  });
-                  
-                  let totalWorkItems = 0;
-                  Object.keys(pdtGroups).forEach(pdtTeamId => {
-                    const pdtItems = pdtGroups[pdtTeamId];
-                    totalWorkItems += pdtItems.length;
-                  });
-                  
-                  // Add height for timeline work items
-                  projectHeight += totalWorkItems * (barHeight + itemSpacing) + 20;
-                  
-                  // Add height for backlog items (if any)
-                  if (projectBacklogItems.length > 0) {
-                    projectHeight += projectBacklogItems.length * 60 + 10; // 60px per backlog item + padding
-                  }
-                } else {
-                  // Even when collapsed, ensure we have space for backlog items
-                  if (projectBacklogItems.length > 0) {
-                    projectHeight += projectBacklogItems.length * 60 + 10;
-                  }
-                }
+                // Use the same height calculation function for consistency
+                const projectHeight = calculateProjectHeight(group.project.id);
                 
                 const backlogY = currentBacklogY;
                 currentBacklogY += projectHeight + 10; // Match timeline spacing
@@ -626,34 +603,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 const projectItems = getWorkItemsByProject(filteredWorkItems, group.project.id)
                   .filter(item => !item.isInBacklog);
                 
-                // Calculate project height - use same logic as total height calculation
-                let projectHeight = 50; // Base header height
-                
-                if (isExpanded) {
-                  // Use same logic as total height calculation
-                  const sortedItems = sortWorkItemsByPDTAndRow(projectItems);
-                  
-                  // Group by PDT team to calculate rows
-                  const pdtGroups: { [pdtTeamId: string]: WorkItem[] } = {};
-                  
-                  sortedItems.forEach(workItem => {
-                    if (!workItem.startDate || !workItem.endDate) return;
-                    
-                    if (!pdtGroups[workItem.pdtTeamId]) {
-                      pdtGroups[workItem.pdtTeamId] = [];
-                    }
-                    pdtGroups[workItem.pdtTeamId].push(workItem);
-                  });
-                  
-                  // Count total work items (each gets its own row)
-                  let totalWorkItems = 0;
-                  Object.keys(pdtGroups).forEach(pdtTeamId => {
-                    const pdtItems = pdtGroups[pdtTeamId];
-                    totalWorkItems += pdtItems.length;
-                  });
-                  
-                  projectHeight += totalWorkItems * (barHeight + itemSpacing) + 20; // Add work items height
-                }
+                // Use the same height calculation function for consistency
+                const projectHeight = calculateProjectHeight(group.project.id);
                 
                 const projectY = currentY;
                 currentY += projectHeight + 10; // Add spacing between projects
