@@ -25,6 +25,9 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<Partial<WorkItem>>({});
   const [selectedDependencies, setSelectedDependencies] = useState<string[]>([]);
+  const [isAddDependencyOpen, setIsAddDependencyOpen] = useState(false);
+  const [dependencySearchTerm, setDependencySearchTerm] = useState('');
+  const [dependencyType, setDependencyType] = useState<'predecessor' | 'successor'>('predecessor');
 
   useEffect(() => {
     if (workItem) {
@@ -208,14 +211,22 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
 
           {/* Dependencies */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Predecessors (Dependencies)
-            </label>
+            <div className="flex items-center justify-between mb-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Dependencies
+              </label>
+              <button
+                onClick={() => setIsAddDependencyOpen(true)}
+                className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Add Dependency
+              </button>
+            </div>
             
-            {/* Current Dependencies */}
-            {selectedDependencies.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-600 mb-2">Current Predecessors:</h4>
+            {/* Predecessors */}
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-gray-600 mb-2">Predecessors:</h4>
+              {selectedDependencies.length > 0 ? (
                 <div className="space-y-2">
                   {selectedDependencies.map(depId => {
                     const depItem = allWorkItems.find(item => item.id === depId);
@@ -230,6 +241,7 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                           />
                           <span className="text-sm font-medium text-gray-900">{depItem.name}</span>
                           <span className="text-xs text-gray-500">({depProject?.name})</span>
+                          <span className="text-xs text-gray-400">ID: {depItem.id}</span>
                         </div>
                         <button
                           onClick={() => setSelectedDependencies(prev => prev.filter(id => id !== depId))}
@@ -241,83 +253,53 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                     );
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="text-sm text-gray-500 italic py-2">
+                  No predecessors
+                </div>
+              )}
+            </div>
 
-            {/* Add New Dependencies */}
+            {/* Successors */}
             <div>
-              <h4 className="text-sm font-medium text-gray-600 mb-2">
-                {selectedDependencies.length > 0 ? 'Add More Predecessors:' : 'Add Predecessors:'}
-              </h4>
-              <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-md p-2">
-                {availableDependencies
-                  .filter(item => !selectedDependencies.includes(item.id))
-                  .map(item => {
-                    const project = projects.find(p => p.id === item.projectId);
+              <h4 className="text-sm font-medium text-gray-600 mb-2">Successors:</h4>
+              {workItem.successors && workItem.successors.length > 0 ? (
+                <div className="space-y-2">
+                  {workItem.successors.map(succId => {
+                    const succItem = allWorkItems.find(item => item.id === succId);
+                    if (!succItem) return null;
+                    const succProject = projects.find(p => p.id === succItem.projectId);
                     return (
-                      <label key={item.id} className="flex items-center space-x-2 py-1 hover:bg-gray-50 rounded px-1">
-                        <input
-                          type="checkbox"
-                          checked={false}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedDependencies(prev => [...prev, item.id]);
-                            }
-                          }}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
+                      <div key={succId} className="flex items-center justify-between p-2 bg-blue-50 rounded-md">
                         <div className="flex items-center space-x-2">
                           <div 
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: project?.color || '#gray' }}
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: succProject?.color || '#gray' }}
                           />
-                          <span className="text-sm text-gray-700 font-medium">{item.name}</span>
-                          <span className="text-xs text-gray-500">({project?.name})</span>
+                          <span className="text-sm font-medium text-gray-900">{succItem.name}</span>
+                          <span className="text-xs text-gray-500">({succProject?.name})</span>
+                          <span className="text-xs text-gray-400">ID: {succItem.id}</span>
                         </div>
-                      </label>
+                        <button
+                          onClick={() => {
+                            // Remove this item from the current work item's successors
+                            const updatedSuccessors = workItem.successors.filter(id => id !== succId);
+                            handleInputChange('successors', updatedSuccessors);
+                          }}
+                          className="text-red-600 hover:text-red-800 text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     );
                   })}
-                {availableDependencies.filter(item => !selectedDependencies.includes(item.id)).length === 0 && (
-                  <div className="text-sm text-gray-500 italic py-2">
-                    No more work items available to add as predecessors
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-500 italic py-2">
+                  No successors
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Successors */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Successors (Dependent Work Items)
-            </label>
-            
-            {/* Current Successors */}
-            {workItem.successors && workItem.successors.length > 0 ? (
-              <div className="space-y-2">
-                {workItem.successors.map(succId => {
-                  const succItem = allWorkItems.find(item => item.id === succId);
-                  if (!succItem) return null;
-                  const succProject = projects.find(p => p.id === succItem.projectId);
-                  return (
-                    <div key={succId} className="flex items-center p-2 bg-blue-50 rounded-md">
-                      <div className="flex items-center space-x-2">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: succProject?.color || '#gray' }}
-                        />
-                        <span className="text-sm font-medium text-gray-900">{succItem.name}</span>
-                        <span className="text-xs text-gray-500">({succProject?.name})</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500 italic py-2">
-                No work items depend on this item
-              </div>
-            )}
           </div>
         </div>
 
@@ -347,6 +329,154 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Add Dependency Popup */}
+      {isAddDependencyOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Add Dependency
+              </h3>
+              <button
+                onClick={() => {
+                  setIsAddDependencyOpen(false);
+                  setDependencySearchTerm('');
+                  setDependencyType('predecessor');
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-4">
+              {/* Dependency Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dependency Type
+                </label>
+                <div className="flex space-x-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      value="predecessor"
+                      checked={dependencyType === 'predecessor'}
+                      onChange={(e) => setDependencyType(e.target.value as 'predecessor' | 'successor')}
+                      className="mr-2"
+                    />
+                    <span className="text-sm">Predecessor</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      value="successor"
+                      checked={dependencyType === 'successor'}
+                      onChange={(e) => setDependencyType(e.target.value as 'predecessor' | 'successor')}
+                      className="mr-2"
+                    />
+                    <span className="text-sm">Successor</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search Work Items
+                </label>
+                <input
+                  type="text"
+                  placeholder="Search by ID or name..."
+                  value={dependencySearchTerm}
+                  onChange={(e) => setDependencySearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* Search Results */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Available Work Items
+                </label>
+                <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-md">
+                  {allWorkItems
+                    .filter(item => {
+                      if (item.id === workItem.id) return false;
+                      if (dependencyType === 'predecessor' && selectedDependencies.includes(item.id)) return false;
+                      if (dependencyType === 'successor' && workItem.successors?.includes(item.id)) return false;
+                      
+                      const searchLower = dependencySearchTerm.toLowerCase();
+                      return item.id.toLowerCase().includes(searchLower) || 
+                             item.name.toLowerCase().includes(searchLower);
+                    })
+                    .map(item => {
+                      const project = projects.find(p => p.id === item.projectId);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                          onClick={() => {
+                            if (dependencyType === 'predecessor') {
+                              setSelectedDependencies(prev => [...prev, item.id]);
+                            } else {
+                              const updatedSuccessors = [...(workItem.successors || []), item.id];
+                              handleInputChange('successors', updatedSuccessors);
+                            }
+                            setIsAddDependencyOpen(false);
+                            setDependencySearchTerm('');
+                          }}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: project?.color || '#gray' }}
+                            />
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                              <div className="text-xs text-gray-500">
+                                {project?.name} • ID: {item.id}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            Add as {dependencyType}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {allWorkItems.filter(item => {
+                    if (item.id === workItem.id) return false;
+                    if (dependencyType === 'predecessor' && selectedDependencies.includes(item.id)) return false;
+                    if (dependencyType === 'successor' && workItem.successors?.includes(item.id)) return false;
+                    
+                    const searchLower = dependencySearchTerm.toLowerCase();
+                    return item.id.toLowerCase().includes(searchLower) || 
+                           item.name.toLowerCase().includes(searchLower);
+                  }).length === 0 && (
+                    <div className="p-4 text-sm text-gray-500 text-center">
+                      No work items found
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => {
+                  setIsAddDependencyOpen(false);
+                  setDependencySearchTerm('');
+                  setDependencyType('predecessor');
+                }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 
