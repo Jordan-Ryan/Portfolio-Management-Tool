@@ -425,7 +425,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                               }`}
                               draggable
                               onDragStart={(e) => handleDragStart(e, workItem)}
-                              onDoubleClick={() => onEdit(workItem)}
+                              onClick={(e) => {
+                                // Only handle click if not clicking on alert button
+                                const target = e.target as Element;
+                                if (!target.closest('[data-alert-icon]') && !target.closest('[data-alert-popover]')) {
+                                  onEdit(workItem);
+                                }
+                              }}
                             >
                               <div className="text-xs font-medium text-gray-900 truncate">{workItem.name}</div>
                               <div className="text-xs text-gray-500">
@@ -438,6 +444,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                   type="button"
                                   className="absolute top-1 right-1 text-red-500 text-xs cursor-pointer bg-transparent border-none p-0" 
                                   data-alert-icon
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    e.nativeEvent.stopImmediatePropagation();
+                                  }}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();

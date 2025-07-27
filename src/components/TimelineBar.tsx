@@ -60,7 +60,6 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
     <g
       transform={`translate(${x}, ${y})`}
       className="cursor-grab active:cursor-grabbing"
-      onDoubleClick={() => onEdit(workItem)}
       onMouseDown={(e) => {
         // For timeline items, use mouse-based dragging
         if (workItem.startDate && workItem.endDate) {
@@ -68,10 +67,14 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
         }
       }}
       onClick={(e) => {
-        // Toggle popover on click if there are alerts
+        // Handle click for editing or alert popover
         if (hasAlert) {
+          // If there are alerts, toggle the popover
           e.stopPropagation();
           setIsPopoverOpen(!isPopoverOpen);
+        } else {
+          // If no alerts, edit the work item
+          onEdit(workItem);
         }
       }}
     >
