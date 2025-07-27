@@ -1161,6 +1161,102 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         {/* Ghost Item for Drag and Drop */}
         {ghostItem && (() => {
           const workItem = ghostItem.workItem;
+          
+          // For backlog items, we don't have start/end dates, so create a simple ghost
+          if (workItem.isInBacklog) {
+            const pdtTeam = getPDTTeam(workItem.pdtTeamId);
+            
+            // Helper function to truncate text
+            const truncateText = (text: string, maxWidth: number, fontSize: number = 12) => {
+              const charWidth = fontSize * 0.55;
+              const maxChars = Math.floor(maxWidth / charWidth);
+              
+              if (text.length <= maxChars) {
+                return text;
+              }
+              
+              const ellipsisChars = 3;
+              const availableChars = Math.max(0, maxChars - ellipsisChars);
+              
+              if (availableChars <= 0) {
+                return '...';
+              }
+              
+              return text.substring(0, availableChars) + '...';
+            };
+            
+            // Calculate width based on duration (default to 2 weeks if no duration)
+            const duration = workItem.duration || 2;
+            const width = duration * weekWidth;
+            
+            // Check for alerts
+            const hasBacklogCompletion = workItem.completedPercentage > 0;
+            const hasDependencyConflict = checkDependencyConflict(workItem, workItems);
+            const hasAlert = hasBacklogCompletion || hasDependencyConflict;
+            
+            return (
+              <svg
+                className="fixed pointer-events-none z-50"
+                style={{
+                  left: ghostItem.x,
+                  top: ghostItem.y - barHeight / 2,
+                  width: `${width}px`,
+                  height: `${barHeight}px`,
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  MozUserSelect: 'none',
+                  msUserSelect: 'none'
+                }}
+              >
+                {/* Background bar */}
+                <rect
+                  width={width}
+                  height={barHeight}
+                  rx={4}
+                  fill="#f3f4f6"
+                  stroke="#d1d5db"
+                  strokeWidth={1}
+                  opacity={0.9}
+                />
+                
+                {/* Text content */}
+                <text
+                  x={hasAlert ? 25 : 8}
+                  y={barHeight / 2 + 4}
+                  fontSize={12}
+                  fill="#374151"
+                  className="font-medium"
+                >
+                  {truncateText(workItem.name, width - (hasAlert ? 25 : 8) - 8, 12)}
+                </text>
+                
+                {/* PDT Team name */}
+                <text
+                  x={hasAlert ? 25 : 8}
+                  y={barHeight - 4}
+                  fontSize={10}
+                  fill="#6b7280"
+                >
+                  {truncateText(`${pdtTeam?.name || 'Unknown'} • ${workItem.capacity}% • ${workItem.duration || 2}w`, width - (hasAlert ? 25 : 8) - 8, 10)}
+                </text>
+                
+                {/* Alert indicator */}
+                {hasAlert && (
+                  <text
+                    x={8}
+                    y={barHeight / 2 + 4}
+                    fontSize={12}
+                    fill="#ef4444"
+                    className="font-bold"
+                  >
+                    ⚠️
+                  </text>
+                )}
+              </svg>
+            );
+          }
+          
+          // For timeline items, use the existing logic
           if (!workItem.startDate || !workItem.endDate) return null;
           
           const startWeek = getWeekIndex(workItem.startDate, baseDate);
