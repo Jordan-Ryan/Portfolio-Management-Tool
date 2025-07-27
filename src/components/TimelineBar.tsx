@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { WorkItem, PDTTeam } from '../types';
 import { calculateProgressDelay, checkDependencyConflict, getDependencyConflictDetails, getProgressDelayDetails } from '../utils/calculations';
 
@@ -30,15 +31,29 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [dragTimeout, setDragTimeout] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
+  const workItemRef = useRef<SVGGElement>(null);
   
-  // Cleanup timeout on unmount
+  // Cleanup timeout on unmount and handle click outside
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isPopoverOpen && workItemRef.current && !workItemRef.current.contains(event.target as Node)) {
+        setIsPopoverOpen(false);
+        setPopupPosition(null);
+      }
+    };
+
+    if (isPopoverOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
     return () => {
       if (dragTimeout) {
         clearTimeout(dragTimeout);
       }
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [dragTimeout]);
+  }, [dragTimeout, isPopoverOpen]);
   
   const hasDependencyConflict = checkDependencyConflict(workItem, allWorkItems);
   const dependencyConflictDetails = getDependencyConflictDetails(workItem, allWorkItems);
@@ -69,6 +84,7 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
 
   return (
     <g
+      ref={workItemRef}
       transform={`translate(${x}, ${y})`}
       className={`${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={(e) => {
@@ -209,6 +225,22 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
           className="font-bold cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
+            if (!isPopoverOpen) {
+              // Calculate position for popup
+              const rect = workItemRef.current?.getBoundingClientRect();
+              if (rect) {
+                const viewportHeight = window.innerHeight;
+                const popupHeight = hasDependencyConflict ? 120 : (hasDelay || hasFutureCompletion || hasPastIncomplete ? 80 : 60);
+                
+                // Check if popup would go below viewport
+                const wouldGoBelow = rect.bottom + popupHeight > viewportHeight;
+                
+                setPopupPosition({
+                  x: rect.left,
+                  y: wouldGoBelow ? rect.top - popupHeight - 5 : rect.bottom + 5
+                });
+              }
+            }
             setIsPopoverOpen(!isPopoverOpen);
           }}
         >
@@ -216,113 +248,62 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
         </text>
       )}
       
-      {/* Alert Popover */}
-      {isPopoverOpen && hasAlert && (
-        <g transform={`translate(0, ${height + 5})`}>
-          {/* Popover background */}
-          <rect
-            x={-5}
-            y={0}
-            width={width + 10}
-            height={hasDependencyConflict ? 120 : (hasDelay || hasFutureCompletion || hasPastIncomplete ? 80 : 60)}
-            fill="#1f2937"
-            rx={6}
-            opacity={0.95}
-          />
+      {/* Portal-based Alert Popover */}
+      {isPopoverOpen && hasAlert && popupPosition && createPortal(
+        <div
+          className="fixed bg-gray-800 text-white rounded border border-red-500 p-2 text-xs shadow-lg"
+          style={{
+            left: `${popupPosition.x}px`,
+            top: `${popupPosition.y}px`,
+            zIndex: 9999,
+            minWidth: `${width + 10}px`,
+            maxWidth: '300px'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center mb-2">
+            <span className="text-red-400 mr-2">⚠️</span>
+            <span className="font-semibold">Issues Detected:</span>
+          </div>
           
-          {/* Popover border */}
-          <rect
-            x={-5}
-            y={0}
-            width={width + 10}
-            height={hasDependencyConflict ? 120 : (hasDelay || hasFutureCompletion || hasPastIncomplete ? 80 : 60)}
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth={1}
-            rx={6}
-          />
-          
-          {/* Alert icon */}
-          <text
-            x={8}
-            y={16}
-            fontSize={12}
-            fill="#ef4444"
-            className="font-bold"
-          >
-            ⚠️
-          </text>
-          
-          {/* Alert title */}
-          <text
-            x={25}
-            y={16}
-            fontSize={11}
-            fill="#ffffff"
-            className="font-semibold"
-          >
-            Issues Detected:
-          </text>
-          
-          {/* Alert messages - dependency conflict always at bottom */}
           {hasDelay && (
-            <text x={8} y={32} fontSize={10} fill="#fca5a5">
+            <div className="text-red-300 mb-1">
               • Behind schedule: currently {progressDelayDetails.currentProgress}% complete, expected {progressDelayDetails.expectedProgress}% complete
-            </text>
+            </div>
           )}
+          
           {hasFutureCompletion && (
-            <text x={8} y={hasDelay ? 48 : 32} fontSize={10} fill="#fca5a5">
+            <div className="text-red-300 mb-1">
               • Future work item has completion percentage ({workItem.completedPercentage}%)
-            </text>
+            </div>
           )}
+          
           {hasPastIncomplete && (
-            <text x={8} y={hasDelay || hasFutureCompletion ? 64 : 32} fontSize={10} fill="#fca5a5">
+            <div className="text-red-300 mb-1">
               • Past work should be 100% complete
-            </text>
+            </div>
           )}
+          
           {hasDependencyConflict && (
-            <>
-              <text x={8} y={hasDelay || hasFutureCompletion || hasPastIncomplete ? 80 : 32} fontSize={10} fill="#fca5a5">
-                • Dependency on: {dependencyConflictDetails.join(', ')}
-              </text>
-              {/* Acknowledge button */}
-              <rect
-                x={8}
-                y={92}
-                width={80}
-                height={20}
-                fill="#22c55e"
-                rx={4}
-                className="cursor-pointer"
-                onClick={() => {
-                  // Acknowledge the first dependency conflict
-                  const firstConflict = dependencyConflictDetails[0];
-                  const conflictItem = allWorkItems.find(w => w.name === firstConflict);
-                  if (conflictItem) {
-                    onAcknowledgeDependency(workItem.id, conflictItem.id);
-                  }
-                }}
-              />
-              <text
-                x={48}
-                y={105}
-                fontSize={9}
-                fill="#ffffff"
-                textAnchor="middle"
-                className="cursor-pointer font-medium"
+            <div className="text-red-300 mb-2">
+              <div className="mb-1">• Dependency on: {dependencyConflictDetails.join(', ')}</div>
+              <button
+                className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors"
                 onClick={() => {
                   const firstConflict = dependencyConflictDetails[0];
                   const conflictItem = allWorkItems.find(w => w.name === firstConflict);
                   if (conflictItem) {
                     onAcknowledgeDependency(workItem.id, conflictItem.id);
                   }
+                  setIsPopoverOpen(false);
                 }}
               >
                 Acknowledge
-              </text>
-            </>
+              </button>
+            </div>
           )}
-        </g>
+        </div>,
+        document.body
       )}
     </g>
   );
