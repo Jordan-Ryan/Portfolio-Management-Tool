@@ -15,7 +15,7 @@ function App() {
   const [pdtTeams] = useState<PDTTeam[]>(samplePDTTeams);
   const [workItems, setWorkItems] = useState<WorkItem[]>(sampleWorkItems);
   const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [selectedPDTFilter, setSelectedPDTFilter] = useState<string | null>(null);
+  const [selectedPDTFilter, setSelectedPDTFilter] = useState<string[]>([]);
   const [editingWorkItem, setEditingWorkItem] = useState<WorkItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAlertsPopoverOpen, setIsAlertsPopoverOpen] = useState(false);
@@ -100,7 +100,11 @@ function App() {
   };
 
   const handlePDTClick = (pdtTeamId: string) => {
-    setSelectedPDTFilter(pdtTeamId);
+    setSelectedPDTFilter(prev => 
+      prev.includes(pdtTeamId) 
+        ? prev.filter(id => id !== pdtTeamId)
+        : [...prev, pdtTeamId]
+    );
   };
 
   const handleAlertsClick = () => {
@@ -155,7 +159,7 @@ function App() {
               selectedPDTFilter={selectedPDTFilter}
               onEdit={handleEdit}
               onWorkItemMove={handleWorkItemMove}
-              onPDTFilterChange={setSelectedPDTFilter}
+              onPDTFilterChange={(pdtTeamIds) => setSelectedPDTFilter(pdtTeamIds)}
               onAcknowledgeDependency={handleAcknowledgeDependency}
             />
           </div>
@@ -164,7 +168,7 @@ function App() {
             pdtTeams={pdtTeams}
             workItems={workItems}
             selectedPDTFilter={selectedPDTFilter}
-            onPDTFilterChange={setSelectedPDTFilter}
+            onPDTFilterChange={(pdtTeamIds) => setSelectedPDTFilter(pdtTeamIds)}
           />
         )}
       </main>

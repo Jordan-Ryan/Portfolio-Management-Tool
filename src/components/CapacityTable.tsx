@@ -6,8 +6,8 @@ import { getAllWeeksInYear, getWeekIndex } from '../utils/dateUtils';
 interface CapacityTableProps {
   pdtTeams: PDTTeam[];
   workItems: WorkItem[];
-  selectedPDTFilter: string | null;
-  onPDTFilterChange: (pdtTeamId: string | null) => void;
+  selectedPDTFilter: string[];
+  onPDTFilterChange: (pdtTeamIds: string[]) => void;
 }
 
 export const CapacityTable: React.FC<CapacityTableProps> = ({
@@ -112,16 +112,22 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
           </thead>
           <tbody className="divide-y divide-gray-200">
             {pdtTeams
-              .filter(team => !selectedPDTFilter || selectedPDTFilter === team.id)
+              .filter(team => selectedPDTFilter.length === 0 || selectedPDTFilter.includes(team.id))
               .map((team) => {
-                const isSelected = selectedPDTFilter === team.id;
+                const isSelected = selectedPDTFilter.includes(team.id);
                 return (
                   <tr 
                     key={team.id}
                     className={`hover:bg-gray-50 cursor-pointer transition-colors ${
                       isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                     }`}
-                    onClick={() => onPDTFilterChange(isSelected ? null : team.id)}
+                    onClick={() => {
+                      if (isSelected) {
+                        onPDTFilterChange(selectedPDTFilter.filter(id => id !== team.id));
+                      } else {
+                        onPDTFilterChange([...selectedPDTFilter, team.id]);
+                      }
+                    }}
                   >
                   <td className={`sticky left-0 z-10 px-4 py-3 text-sm font-medium text-gray-900 border-r border-gray-200 ${
                     isSelected ? 'bg-blue-50' : 'bg-white'
@@ -193,9 +199,9 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
             </div>
           </div>
           <div>
-            {selectedPDTFilter && (
+            {selectedPDTFilter.length > 0 && (
               <button
-                onClick={() => onPDTFilterChange(null)}
+                onClick={() => onPDTFilterChange([])}
                 className="text-blue-600 hover:text-blue-800 font-medium"
               >
                 Clear Filter

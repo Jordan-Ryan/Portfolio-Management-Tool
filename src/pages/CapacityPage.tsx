@@ -5,8 +5,8 @@ import { PDTTeam, WorkItem } from '../types';
 interface CapacityPageProps {
   pdtTeams: PDTTeam[];
   workItems: WorkItem[];
-  selectedPDTFilter: string | null;
-  onPDTFilterChange: (pdtTeamId: string | null) => void;
+  selectedPDTFilter: string[];
+  onPDTFilterChange: (pdtTeamIds: string[]) => void;
 }
 
 export const CapacityPage: React.FC<CapacityPageProps> = ({
@@ -34,8 +34,8 @@ export const CapacityPage: React.FC<CapacityPageProps> = ({
               </label>
               <select
                 id="capacity-pdt-filter"
-                value={selectedPDTFilter || ''}
-                onChange={(e) => onPDTFilterChange(e.target.value || null)}
+                value={selectedPDTFilter.length > 0 ? selectedPDTFilter[0] : ''}
+                onChange={(e) => onPDTFilterChange(e.target.value ? [e.target.value] : [])}
                 className="block w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All PDT Teams</option>

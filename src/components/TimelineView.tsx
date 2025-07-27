@@ -10,10 +10,10 @@ interface TimelineViewProps {
   workItems: WorkItem[];
   projects: Project[];
   pdtTeams: PDTTeam[];
-  selectedPDTFilter: string | null;
+  selectedPDTFilter: string[];
   onEdit: (workItem: WorkItem) => void;
   onWorkItemMove: (workItemId: string, newStartDate: Date) => void;
-  onPDTFilterChange: (pdtTeamId: string | null) => void;
+  onPDTFilterChange: (pdtTeamIds: string[]) => void;
   onAcknowledgeDependency: (workItemId: string, dependencyId: string) => void;
 }
 
@@ -57,13 +57,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const baseDate = weeks[0].start; // First week as base date
   
   // Filter work items based on PDT filter
-  const filteredWorkItems = selectedPDTFilter 
-    ? workItems.filter(item => item.pdtTeamId === selectedPDTFilter)
+  const filteredWorkItems = selectedPDTFilter.length > 0
+    ? workItems.filter(item => selectedPDTFilter.includes(item.pdtTeamId))
     : workItems;
 
   // Get backlog items for inline display - apply PDT filter
-  const backlogItems = selectedPDTFilter 
-    ? workItems.filter(item => item.isInBacklog && item.pdtTeamId === selectedPDTFilter)
+  const backlogItems = selectedPDTFilter.length > 0
+    ? workItems.filter(item => item.isInBacklog && selectedPDTFilter.includes(item.pdtTeamId))
     : workItems.filter(item => item.isInBacklog);
 
   // Group work items by project
@@ -320,8 +320,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Project Roadmap</h3>
             <p className="text-sm text-gray-600 mt-1">
-              {selectedPDTFilter 
-                ? `Filtered by: ${getPDTTeam(selectedPDTFilter)?.name}`
+              {selectedPDTFilter.length > 0
+                ? `Filtered by: ${selectedPDTFilter.map(id => getPDTTeam(id)?.name).join(', ')}`
                 : 'All PDT teams'
               }
             </p>
@@ -334,8 +334,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
             </label>
             <select
               id="pdt-filter"
-              value={selectedPDTFilter || ''}
-              onChange={(e) => onPDTFilterChange(e.target.value || null)}
+              value={selectedPDTFilter.length > 0 ? selectedPDTFilter[0] : ''}
+              onChange={(e) => onPDTFilterChange(e.target.value ? [e.target.value] : [])}
               className="block w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All PDT Teams</option>
