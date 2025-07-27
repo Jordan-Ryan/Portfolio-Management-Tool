@@ -247,15 +247,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           if (containerRect) {
             const x = dropEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
             
-            // Check if drop is in the timeline area (not in backlog area)
-            if (x > backlogColumnWidth) {
-              const timelineX = x - backlogColumnWidth;
-              const weekIndex = Math.floor(timelineX / weekWidth);
-              
-              if (weekIndex >= 0 && weekIndex < weeks.length) {
-                const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
-                onWorkItemMove(workItem.id, newStartDate);
-              }
+            // Since containerRef is the timeline area (after backlog), we don't need to subtract backlog width
+            const weekIndex = Math.floor(x / weekWidth);
+            
+            if (weekIndex >= 0 && weekIndex < weeks.length) {
+              const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+              onWorkItemMove(workItem.id, newStartDate);
             }
           }
           
@@ -685,15 +682,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                     if (containerRect) {
                                       const x = dropEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
                                       
-                                      // Check if drop is in the timeline area (not in backlog area)
-                                      if (x > backlogColumnWidth) {
-                                        const timelineX = x - backlogColumnWidth;
-                                        const weekIndex = Math.floor(timelineX / weekWidth);
-                                        
-                                        if (weekIndex >= 0 && weekIndex < weeks.length) {
-                                          const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
-                                          onWorkItemMove(workItem.id, newStartDate);
-                                        }
+                                      // Since containerRef is the timeline area (after backlog), we don't need to subtract backlog width
+                                      const weekIndex = Math.floor(x / weekWidth);
+                                      
+                                      if (weekIndex >= 0 && weekIndex < weeks.length) {
+                                        const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+                                        onWorkItemMove(workItem.id, newStartDate);
                                       }
                                     }
                                     
