@@ -418,14 +418,36 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                           return (
                             <div 
                               key={workItem.id}
-                              className={`mb-2 p-2 rounded border cursor-move transition-colors relative ${
+                              className={`mb-2 p-2 rounded border transition-colors relative ${
                                 hasAlert 
                                   ? 'bg-red-50 border-red-300 hover:bg-red-100' 
                                   : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
                               }`}
                               draggable
-                              onDragStart={(e) => handleDragStart(e, workItem)}
+                              onDragStart={(e) => {
+                                // Add 2 second delay for drag start
+                                e.preventDefault();
+                                const timeout = setTimeout(() => {
+                                  handleDragStart(e, workItem);
+                                }, 2000);
+                                
+                                // Store timeout reference to clear if needed
+                                (e.target as any).dragTimeout = timeout;
+                              }}
+                              onDragEnd={(e) => {
+                                // Clear timeout if drag ends early
+                                if ((e.target as any).dragTimeout) {
+                                  clearTimeout((e.target as any).dragTimeout);
+                                  (e.target as any).dragTimeout = null;
+                                }
+                              }}
                               onClick={(e) => {
+                                // Clear any pending drag timeout
+                                if ((e.target as any).dragTimeout) {
+                                  clearTimeout((e.target as any).dragTimeout);
+                                  (e.target as any).dragTimeout = null;
+                                }
+                                
                                 // Only handle click if not clicking on alert button
                                 const target = e.target as Element;
                                 if (!target.closest('[data-alert-icon]') && !target.closest('[data-alert-popover]')) {
@@ -696,7 +718,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                           opacity={0.1}
                           rx={4}
                           className="cursor-pointer hover:opacity-20 transition-opacity"
-                          onClick={() => toggleProjectExpansion(group.project.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProjectExpansion(group.project.id);
+                          }}
                         />
                         
                         {/* Project name and info */}
@@ -706,7 +731,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                           fontSize={14}
                           fill="#374151"
                           className="font-semibold cursor-pointer"
-                          onClick={() => toggleProjectExpansion(group.project.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProjectExpansion(group.project.id);
+                          }}
                         >
                           {group.project.name}
                         </text>
@@ -723,7 +751,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                         <g
                           transform={`translate(${projectDuration * weekWidth - 30}, 12)`}
                           className="cursor-pointer"
-                          onClick={() => toggleProjectExpansion(group.project.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProjectExpansion(group.project.id);
+                          }}
                         >
                           {isExpanded ? (
                             <path

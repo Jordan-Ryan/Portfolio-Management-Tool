@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WorkItem, PDTTeam } from '../types';
 import { calculateProgressDelay, checkDependencyConflict, getDependencyConflictDetails, getProgressDelayDetails } from '../utils/calculations';
 
@@ -28,6 +28,17 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
   onAcknowledgeDependency
 }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [dragTimeout, setDragTimeout] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (dragTimeout) {
+        clearTimeout(dragTimeout);
+      }
+    };
+  }, [dragTimeout]);
   
   const hasDependencyConflict = checkDependencyConflict(workItem, allWorkItems);
   const dependencyConflictDetails = getDependencyConflictDetails(workItem, allWorkItems);
@@ -59,14 +70,40 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
   return (
     <g
       transform={`translate(${x}, ${y})`}
-      className="cursor-grab active:cursor-grabbing"
+      className={`${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={(e) => {
-        // For timeline items, use mouse-based dragging
+        // Start drag delay timer
         if (workItem.startDate && workItem.endDate) {
-          onDragStart(e as any, workItem);
+          const timeout = window.setTimeout(() => {
+            setIsDragging(true);
+            onDragStart(e as any, workItem);
+          }, 2000); // 2 second delay
+          setDragTimeout(timeout);
         }
       }}
+      onMouseUp={() => {
+        // Clear drag timeout if mouse is released before delay
+        if (dragTimeout) {
+          clearTimeout(dragTimeout);
+          setDragTimeout(null);
+        }
+        setIsDragging(false);
+      }}
+      onMouseLeave={() => {
+        // Clear drag timeout if mouse leaves
+        if (dragTimeout) {
+          clearTimeout(dragTimeout);
+          setDragTimeout(null);
+        }
+        setIsDragging(false);
+      }}
       onClick={(e) => {
+        // Clear any pending drag timeout
+        if (dragTimeout) {
+          clearTimeout(dragTimeout);
+          setDragTimeout(null);
+        }
+        
         // Handle click for editing or alert popover
         if (hasAlert) {
           // If there are alerts, toggle the popover
