@@ -15,8 +15,10 @@ The drag and drop system has been completely redesigned to provide a better user
 ### **2. Ghost Item Visualization**
 - **Blue floating element** follows the mouse cursor
 - **Shows work item name** for clear identification
+- **Correct width** - matches the actual work item duration
+- **Precise positioning** - drops exactly where the ghost appears
 - **Semi-transparent** so it doesn't block the view
-- **Positioned near cursor** for intuitive feedback
+- **No text selection** - prevents highlighting during drag
 
 ### **3. Drop Placement**
 - **Drag ghost item** to desired timeline position
@@ -76,18 +78,44 @@ const timeout = window.setTimeout(() => {
 
 ### **Ghost Item Rendering:**
 ```typescript
-{ghostItem && (
-  <div
-    className="fixed pointer-events-none z-50 bg-blue-500 text-white px-3 py-1 rounded shadow-lg opacity-80"
-    style={{
-      left: ghostItem.x + 10,
-      top: ghostItem.y - 20,
-      transform: 'translate(-50%, -50%)'
-    }}
-  >
-    {ghostItem.workItem.name}
-  </div>
-)}
+{ghostItem && (() => {
+  const workItem = ghostItem.workItem;
+  if (!workItem.startDate || !workItem.endDate) return null;
+  
+  const startWeek = getWeekIndex(workItem.startDate, baseDate);
+  const endWeek = getWeekIndex(workItem.endDate, baseDate);
+  const startOffset = getWeekOffset(workItem.startDate);
+  const endOffset = getWeekOffset(workItem.endDate);
+  
+  // Calculate precise width for ghost item
+  let width;
+  if (startWeek === endWeek) {
+    width = (endOffset - startOffset) * weekWidth;
+  } else {
+    const fullWeeks = endWeek - startWeek - 1;
+    const startWeekWidth = (1 - startOffset) * weekWidth;
+    const endWeekWidth = endOffset * weekWidth;
+    width = startWeekWidth + (fullWeeks * weekWidth) + endWeekWidth;
+  }
+  
+  return (
+    <div
+      className="fixed pointer-events-none z-50 bg-blue-500 text-white px-3 py-1 rounded shadow-lg opacity-80"
+      style={{
+        left: ghostItem.x,
+        top: ghostItem.y - 20,
+        width: `${width}px`,
+        transform: 'translate(0, -50%)',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none'
+      }}
+    >
+      {workItem.name}
+    </div>
+  );
+})()}
 ```
 
 ## 🎨 **User Experience**
@@ -108,7 +136,9 @@ const timeout = window.setTimeout(() => {
 ### **Visual Feedback:**
 - ✅ **Cursor changes** to "grabbing" after 2 seconds
 - ✅ **Item disappears** from original location
-- ✅ **Ghost item follows** mouse cursor
+- ✅ **Ghost item follows** mouse cursor with correct width
+- ✅ **Precise positioning** - drops exactly where ghost appears
+- ✅ **No text selection** - prevents highlighting during drag
 - ✅ **Smooth animations** and transitions
 - ✅ **Clear visual indication** of drag state
 
