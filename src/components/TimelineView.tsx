@@ -236,6 +236,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           document.removeEventListener('mouseup', handleMouseUp);
           document.body.style.cursor = '';
           
+          // Restore text selection
+          document.body.style.userSelect = '';
+          (document.body.style as any).webkitUserSelect = '';
+          (document.body.style as any).mozUserSelect = '';
+          (document.body.style as any).msUserSelect = '';
+          
           // Handle drop using the current mouse position
           const containerRect = containerRef.current?.getBoundingClientRect();
           if (containerRect) {
@@ -265,6 +271,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           setDragTimeout(null);
         }
         setDraggedItem(null);
+        
+        // Restore text selection
+        document.body.style.userSelect = '';
+        (document.body.style as any).webkitUserSelect = '';
+        (document.body.style as any).mozUserSelect = '';
+        (document.body.style as any).msUserSelect = '';
       };
       
       document.addEventListener('mouseup', handleMouseUp, { once: true });
@@ -631,6 +643,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                 e.preventDefault();
                                 e.stopPropagation();
                                 
+                                // Prevent text selection
+                                document.body.style.userSelect = 'none';
+                                (document.body.style as any).webkitUserSelect = 'none';
+                                (document.body.style as any).mozUserSelect = 'none';
+                                (document.body.style as any).msUserSelect = 'none';
+                                
                                 const timeout = window.setTimeout(() => {
                                   // Create ghost item for backlog items
                                   setGhostItem({ workItem, x: e.clientX, y: e.clientY });
@@ -646,6 +664,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                     document.removeEventListener('mousemove', handleMouseMove);
                                     document.removeEventListener('mouseup', handleMouseUp);
                                     document.body.style.cursor = '';
+                                    
+                                    // Restore text selection
+                                    document.body.style.userSelect = '';
+                                    (document.body.style as any).webkitUserSelect = '';
+                                    (document.body.style as any).mozUserSelect = '';
+                                    (document.body.style as any).msUserSelect = '';
                                     
                                     // Handle drop using the current mouse position
                                     const containerRect = containerRef.current?.getBoundingClientRect();
@@ -676,6 +700,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                   clearTimeout((e.target as any).dragTimeout);
                                   (e.target as any).dragTimeout = null;
                                 }
+                                
+                                // Restore text selection
+                                document.body.style.userSelect = '';
+                                (document.body.style as any).webkitUserSelect = '';
+                                (document.body.style as any).mozUserSelect = '';
+                                (document.body.style as any).msUserSelect = '';
                               }}
                               onClick={(e) => {
                                 // Clear any pending drag timeout
@@ -1117,18 +1147,46 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         </svg>
         
         {/* Ghost Item for Drag and Drop */}
-        {ghostItem && (
-          <div
-            className="fixed pointer-events-none z-50 bg-blue-500 text-white px-3 py-1 rounded shadow-lg opacity-80"
-            style={{
-              left: ghostItem.x + 10,
-              top: ghostItem.y - 20,
-              transform: 'translate(-50%, -50%)'
-            }}
-          >
-            {ghostItem.workItem.name}
-          </div>
-        )}
+        {ghostItem && (() => {
+          const workItem = ghostItem.workItem;
+          if (!workItem.startDate || !workItem.endDate) return null;
+          
+          const startWeek = getWeekIndex(workItem.startDate, baseDate);
+          const endWeek = getWeekIndex(workItem.endDate, baseDate);
+          const startOffset = getWeekOffset(workItem.startDate);
+          const endOffset = getWeekOffset(workItem.endDate);
+          
+          // Calculate precise width for ghost item
+          let width;
+          if (startWeek === endWeek) {
+            // Same week - calculate partial width
+            width = (endOffset - startOffset) * weekWidth;
+          } else {
+            // Different weeks - calculate full weeks plus partial weeks
+            const fullWeeks = endWeek - startWeek - 1;
+            const startWeekWidth = (1 - startOffset) * weekWidth;
+            const endWeekWidth = endOffset * weekWidth;
+            width = startWeekWidth + (fullWeeks * weekWidth) + endWeekWidth;
+          }
+          
+          return (
+            <div
+              className="fixed pointer-events-none z-50 bg-blue-500 text-white px-3 py-1 rounded shadow-lg opacity-80"
+              style={{
+                left: ghostItem.x,
+                top: ghostItem.y - 20,
+                width: `${width}px`,
+                transform: 'translate(0, -50%)',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+                MozUserSelect: 'none',
+                msUserSelect: 'none'
+              }}
+            >
+              {workItem.name}
+            </div>
+          );
+        })()}
       </div>
     </div>
   </div>

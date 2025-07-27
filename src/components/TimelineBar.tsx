@@ -107,6 +107,10 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
       transform={`translate(${x}, ${y})`}
       className={`${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       onMouseDown={(e) => {
+        // Prevent text selection during drag
+        e.preventDefault();
+        e.stopPropagation();
+        
         // Start drag delay timer
         if (workItem.startDate && workItem.endDate) {
           const timeout = window.setTimeout(() => {
