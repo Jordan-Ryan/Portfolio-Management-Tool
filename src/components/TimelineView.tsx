@@ -65,6 +65,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   }, [openBacklogPopover, isFilterDropdownOpen, isProjectFilterDropdownOpen]);
   const [draggedItem, setDraggedItem] = useState<WorkItem | null>(null);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
+  const [isDragging, setIsDragging] = useState(false);
 
 
   const weeks = getAllWeeksInYear(new Date().getFullYear()); // All 52 weeks of the year
@@ -209,6 +210,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
   const handleDragStart = (e: React.DragEvent | React.MouseEvent, workItem: WorkItem, workItemX?: number) => {
     setDraggedItem(workItem);
+    setIsDragging(true);
     
     // If it's a mouse event (timeline items), start mouse-based dragging
     if (e.type === 'mousedown') {
@@ -242,6 +244,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         const targetX = mouseX - clickOffsetX;
         const weekIndex = Math.floor((targetX - backlogColumnWidth) / weekWidth);
         
+        // Prevent dragging beyond the timeline bounds
         if (targetX > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
           const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
           onWorkItemMove(workItem.id, newStartDate);
@@ -253,6 +256,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
         document.body.style.cursor = '';
         setDraggedItem(null);
+        setIsDragging(false);
       };
       
       document.addEventListener('mousemove', handleMouseMove);
@@ -287,6 +291,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     const weekOffset = (timelineX % weekWidth) / weekWidth; // 0-1 fraction of the week
     
     // Check if drop is in the timeline area (not in backlog area) and within valid weeks
+    // Also prevent dropping beyond the timeline bounds
     if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
       // Calculate the precise date within the week
       const weekStart = getDateFromWeekIndex(weekIndex, baseDate);
@@ -298,6 +303,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     }
     
     setDraggedItem(null);
+    setIsDragging(false);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -327,9 +333,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
 
 
-  // Auto-scroll to current date on component mount
+  // Auto-scroll to current date on component mount (only when not dragging)
   useEffect(() => {
-    if (containerRef.current) {
+    if (containerRef.current && !isDragging) {
       const currentDate = new Date();
       const currentWeekIndex = getWeekIndex(currentDate, baseDate);
       
@@ -341,7 +347,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         });
       }
     }
-  }, [baseDate, weeks.length, weekWidth, viewportWidth]);
+  }, [baseDate, weeks.length, weekWidth, viewportWidth, isDragging]);
+
+  // Cleanup dragging state on unmount
+  useEffect(() => {
+    return () => {
+      setIsDragging(false);
+      setDraggedItem(null);
+    };
+  }, []);
 
 
 
