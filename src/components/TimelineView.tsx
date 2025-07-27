@@ -225,7 +225,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         setDraggedItem(null); // Remove from timeline
         
         // Add visual feedback
-        document.body.style.cursor = 'grabbing';
+        document.body.style.cursor = 'grab';
         
         const handleMouseMove = (moveEvent: MouseEvent) => {
           setGhostItem(prev => prev ? { ...prev, x: moveEvent.clientX, y: moveEvent.clientY } : null);
@@ -659,8 +659,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                   // Create ghost item for backlog items
                                   setGhostItem({ workItem, x: e.clientX, y: e.clientY });
                                   
-                                  // Add visual feedback
-                                  document.body.style.cursor = 'grabbing';
+                                  // Add visual feedback - closed hand cursor
+                                  document.body.style.cursor = 'grab';
                                   
                                   const handleMouseMove = (moveEvent: MouseEvent) => {
                                     setGhostItem(prev => prev ? { ...prev, x: moveEvent.clientX, y: moveEvent.clientY } : null);
@@ -696,13 +696,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                   
                                   document.addEventListener('mousemove', handleMouseMove);
                                   document.addEventListener('mouseup', handleMouseUp);
-                                }, 2000); // 2 seconds
+                                }, 1000); // 1 second
                                 
                                 // Store timeout reference
                                 (e.target as any).dragTimeout = timeout;
                               }}
                               onMouseUp={(e) => {
-                                // Cancel drag if released before 2 seconds
+                                // Cancel drag if released before 1 second
                                 if ((e.target as any).dragTimeout) {
                                   clearTimeout((e.target as any).dragTimeout);
                                   (e.target as any).dragTimeout = null;
