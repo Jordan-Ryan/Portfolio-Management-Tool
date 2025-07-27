@@ -210,7 +210,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
   const handleDragStart = (e: React.DragEvent | React.MouseEvent, workItem: WorkItem, workItemX?: number) => {
     setDraggedItem(workItem);
-    setIsDragging(true);
     
     // If it's a mouse event (timeline items), start mouse-based dragging
     if (e.type === 'mousedown') {
@@ -232,6 +231,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       
       // Add visual feedback
       document.body.style.cursor = 'grabbing';
+      setIsDragging(true); // Set dragging state when actual drag starts
       
       const handleMouseMove = (moveEvent: MouseEvent) => {
         const containerRect = containerRef.current?.getBoundingClientRect();
@@ -266,6 +266,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     
     // If it's a drag event (backlog items), use HTML5 drag and drop
     const dragEvent = e as React.DragEvent;
+    setIsDragging(true); // Set dragging state for HTML5 drag
     try {
       dragEvent.dataTransfer.setData('text/plain', workItem.id);
       dragEvent.dataTransfer.effectAllowed = 'move';
@@ -347,7 +348,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         });
       }
     }
-  }, [baseDate, weeks.length, weekWidth, viewportWidth, isDragging]);
+  }, [baseDate, weeks.length, weekWidth, viewportWidth]); // Remove isDragging dependency to prevent re-triggering
 
   // Cleanup dragging state on unmount
   useEffect(() => {
