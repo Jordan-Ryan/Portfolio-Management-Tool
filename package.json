@@ -1,14 +1,16 @@
 {
   "name": "portfolio-management-tool",
   "version": "1.0.0",
+  "description": "A comprehensive React-based portfolio management application for tracking projects, work items, and team capacity with advanced alerting and timeline visualization.",
+  "homepage": "https://jordan-ryan.github.io/Portfolio-Management-Tool",
   "type": "module",
-  "description": "Dynamic roadmap tool for managing projects and PDT work items",
-  "main": "index.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "start": "node server.js",
+    "deploy": "npm run build && gh-pages -d dist",
+    "predeploy": "npm run build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
@@ -32,6 +34,7 @@
     "eslint": "^8.53.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.31",
     "tailwindcss": "^3.3.5",
     "typescript": "^5.2.2",

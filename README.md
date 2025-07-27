@@ -38,7 +38,13 @@ A comprehensive React-based portfolio management application for tracking projec
 - **Date Handling**: date-fns
 - **Development Server**: Express.js
 
+## 🌐 Live Demo
+
+**Try the application online**: [Portfolio Management Tool](https://jordan-ryan.github.io/Portfolio-Management-Tool/)
+
 ## 📦 Installation
+
+### Option 1: Run Locally
 
 1. **Clone the repository**
    ```bash
@@ -63,6 +69,14 @@ A comprehensive React-based portfolio management application for tracking projec
 
 5. **Access the application**
    Open your browser and navigate to `http://localhost:3001`
+
+### Option 2: Development Mode
+
+For development with hot reload:
+```bash
+npm run dev
+```
+Then navigate to `http://localhost:3000`
 
 ## 🏗️ Project Structure
 
@@ -143,6 +157,28 @@ The application supports multiple alert types:
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm start` - Start production server
+- `npm run deploy` - Deploy to GitHub Pages
+
+## 🚀 Deployment
+
+### GitHub Pages
+
+The application is automatically deployed to GitHub Pages when you push to the main branch.
+
+**Live URL**: https://jordan-ryan.github.io/Portfolio-Management-Tool/
+
+### Manual Deployment
+
+To manually deploy to GitHub Pages:
+
+```bash
+npm run deploy
+```
+
+This will:
+1. Build the application for production
+2. Deploy the built files to the `gh-pages` branch
+3. Make the application available at the GitHub Pages URL
 
 ### Adding New Features
 
