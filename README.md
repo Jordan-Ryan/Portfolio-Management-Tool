@@ -1,65 +1,49 @@
-# Portfolio Management Tool - Dynamic Roadmap
+# Portfolio Management Tool
 
-A comprehensive project management and scheduling tool designed for managing PDT (Product Development Team) work items with advanced capacity planning, dependency tracking, and real-time alerts.
+A comprehensive React-based portfolio management application for tracking projects, work items, and team capacity with advanced alerting and timeline visualization.
 
 ## 🚀 Features
 
-### Project Management
-- **Visual Project Organization**: Projects are grouped and displayed on the main timeline view
-- **Priority-based Sorting**: Projects are automatically sorted by highest priority
-- **Editable Priority Scores**: Each project has a configurable priority score
-- **Color-coded Projects**: Visual distinction with custom project colors
+### 📊 **Timeline View**
+- Interactive roadmap with drag-and-drop functionality
+- Visual project timelines with work item bars
+- Current date indicator with dotted line styling
+- Expandable/collapsible project groups
 
-### PDT Work Items
-- **Timeline Visualization**: Work items displayed as bars on a chronological timeline
-- **Progress Tracking**: Visual progress indicators with percentage completion
-- **Capacity Management**: Display of FTE allocation and duration for each work item
-- **Team Assignment**: Each work item is associated with a specific PDT team
+### 📈 **Capacity Management**
+- Dedicated capacity page with team overview
+- Percentage-based capacity tracking (e.g., 80% max capacity)
+- Color-coded capacity indicators (Green/Blue/Yellow/Red)
+- Real-time capacity calculations per week
 
-### Interactive Features
-- **Drag & Drop Scheduling**: Move work items from backlog to timeline
-- **Context Menus**: Right-click to edit work item details
-- **Real-time Updates**: Changes reflect immediately across all views
-- **Filtering**: Filter roadmap by specific PDT teams
+### ⚠️ **Smart Alert System**
+- **Progress Delays**: Current work items behind schedule
+- **Past Incomplete Work**: Work items that ended but aren't 100% complete
+- **Future Work Issues**: Work items with future start dates but completion percentages
+- **Backlog Issues**: Backlog items with inappropriate completion percentages
+- **Dependency Conflicts**: Work items with overlapping dependencies
+- **Acknowledge System**: Dismiss specific dependency alerts
 
-### Backlog Management
-- **Unscheduled Items**: Work items without dates appear in backlog
-- **Project Grouping**: Backlog items remain organized by project
-- **Drag to Schedule**: Drag items from backlog to timeline for scheduling
-
-### Dependency Management
-- **Predecessor/Successor Links**: Set dependencies between work items
-- **Visual Dependency Lines**: Dependencies are drawn as arrows between bars
-- **Conflict Detection**: Automatic highlighting of scheduling conflicts
-- **Validation**: System prevents invalid dependency relationships
-
-### Progress & Alert System
-- **Progress Monitoring**: Visual fill indicating completion percentage
-- **Delay Detection**: Alerts when progress lags expected timeline by >20%
-- **Dependency Conflicts**: Warnings for overlapping dependent items
-- **Capacity Overload**: Alerts when PDT teams exceed 100% capacity
-
-### Capacity Management
-- **12-Week Rolling View**: Capacity table showing next 12 weeks
-- **Team Utilization**: Percentage utilization per team per week
-- **Over-capacity Alerts**: Visual indicators for capacity overflow
-- **Interactive Filtering**: Click teams to filter roadmap view
+### 🎯 **Interactive Features**
+- Click-based alert popovers with detailed information
+- Drag-and-drop work item reordering
+- Automatic date-based sorting
+- Responsive design with modern UI
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React 18 with TypeScript
+- **Frontend**: React 18 + TypeScript
 - **Styling**: Tailwind CSS
-- **Visualization**: D3.js for timeline and dependency rendering
-- **Date Handling**: date-fns for date calculations
-- **Icons**: Lucide React
 - **Build Tool**: Vite
+- **Date Handling**: date-fns
+- **Development Server**: Express.js
 
 ## 📦 Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd portfolio-management-tool
+   git clone https://github.com/Jordan-Ryan/Portfolio-Management-Tool.git
+   cd Portfolio-Management-Tool
    ```
 
 2. **Install dependencies**
@@ -67,162 +51,118 @@ A comprehensive project management and scheduling tool designed for managing PDT
    npm install
    ```
 
-3. **Start the development server**
+3. **Build the application**
    ```bash
-   npm run dev
+   npm run build
    ```
 
-4. **Open your browser**
-   Navigate to `http://localhost:3000`
+4. **Start the development server**
+   ```bash
+   npm start
+   ```
 
-## 🎯 Usage Guide
+5. **Access the application**
+   Open your browser and navigate to `http://localhost:3001`
 
-### Getting Started
-1. The application loads with sample data demonstrating all features
-2. Projects are displayed on the left side of the timeline
-3. Work items appear as colored bars showing progress and capacity
-4. The backlog column on the right shows unscheduled items
+## 🏗️ Project Structure
 
-### Managing Work Items
-1. **Edit Work Items**: Double-click any work item bar to open the edit modal
-2. **Schedule Items**: Drag items from the backlog to the timeline
-3. **Move Items**: Drag scheduled items to new dates on the timeline
-4. **Set Dependencies**: Use the edit modal to configure predecessor relationships
-
-### Capacity Planning
-1. **View Capacity**: Check the capacity table below the timeline
-2. **Filter by Team**: Click on a PDT team row to filter the roadmap
-3. **Monitor Overload**: Red cells indicate capacity exceeding 100%
-4. **Clear Filters**: Use the "Clear Filter" button to show all teams
-
-### Alert Management
-1. **View Alerts**: Check the alerts panel on the right side
-2. **Alert Types**: 
-   - 🕐 **Delay Alerts**: Progress behind schedule
-   - ⚠️ **Dependency Alerts**: Scheduling conflicts
-   - 👥 **Capacity Alerts**: Team overload
-3. **Dismiss Alerts**: Click the X button to dismiss individual alerts
-4. **Take Action**: Click "View Work Item" or "View PDT Team" to navigate
-
-### Project Organization
-1. **Priority Management**: Projects are sorted by priority score
-2. **Visual Grouping**: Each project has a distinct color and section
-3. **Work Item Association**: Items stay grouped under their project
-
-## 📊 Data Structure
-
-### Projects
-```typescript
-interface Project {
-  id: string;
-  name: string;
-  priority: number; // Higher = more important
-  color: string;    // Hex color for visualization
-}
+```
+src/
+├── components/          # React components
+│   ├── TimelineView.tsx     # Main timeline component
+│   ├── TimelineBar.tsx      # Individual work item bars
+│   ├── CapacityTable.tsx    # Capacity management table
+│   ├── BacklogColumn.tsx    # Backlog items display
+│   ├── Navigation.tsx       # Navigation between pages
+│   └── WorkItemModal.tsx    # Work item details modal
+├── pages/              # Page components
+│   └── CapacityPage.tsx     # Dedicated capacity page
+├── data/               # Sample data and configurations
+│   └── sampleData.ts        # Test data for demonstration
+├── types/              # TypeScript type definitions
+│   └── index.ts             # Interface definitions
+├── utils/              # Utility functions
+│   ├── calculations.ts      # Alert and capacity calculations
+│   └── dateUtils.ts         # Date manipulation utilities
+└── App.tsx             # Main application component
 ```
 
-### PDT Teams
-```typescript
-interface PDTTeam {
-  id: string;
-  name: string;
-  maxCapacity: number; // Maximum FTEs
-  color: string;       // Team color
-}
-```
+## 🎨 Key Components
 
-### Work Items
-```typescript
-interface WorkItem {
-  id: string;
-  name: string;
-  projectId: string;
-  pdtTeamId: string;
-  startDate?: Date;
-  endDate?: Date;
-  duration: number;           // Weeks
-  capacity: number;           // FTEs
-  completedPercentage: number; // 0-100
-  dependencies: string[];     // Predecessor IDs
-  successors: string[];       // Successor IDs
-  isInBacklog: boolean;
-}
-```
+### TimelineView
+- Renders the main roadmap with project groups
+- Handles drag-and-drop functionality
+- Manages work item positioning and alerts
+
+### TimelineBar
+- Individual work item visualization
+- Alert indicators with click-based popovers
+- Progress and completion status display
+
+### CapacityTable
+- Team capacity overview with percentage-based tracking
+- Color-coded capacity indicators
+- Current date line integration
 
 ## 🔧 Configuration
 
-### Customizing Colors
-Edit `tailwind.config.js` to customize the color palette:
-```javascript
-theme: {
-  extend: {
-    colors: {
-      primary: { /* ... */ },
-      success: { /* ... */ },
-      warning: { /* ... */ },
-      danger: { /* ... */ }
-    }
-  }
-}
-```
+### Alert Types
+The application supports multiple alert types:
 
-### Sample Data
-Modify `src/data/sampleData.ts` to customize the initial data:
-- Add/remove projects
-- Configure PDT teams
-- Create work items with dependencies
-- Set realistic dates and capacities
+1. **Progress Delays**: `hasDelay`
+   - Only applies to current (ongoing) work items
+   - Shows current vs. expected progress
 
-## 🚨 Alert Logic
+2. **Past Incomplete Work**: `hasPastIncomplete`
+   - Applies to work items that have ended
+   - Must be 100% complete if past end date
 
-### Progress Delay Detection
-```typescript
-// Alert triggered when:
-(elapsed_duration / total_duration) > (completed_percentage + 20%)
-```
+3. **Future Work Issues**: `hasFutureCompletion`
+   - Work items with future start dates shouldn't have completion percentages
 
-### Dependency Conflict Detection
-```typescript
-// Alert triggered when:
-successor.start_date < predecessor.end_date
-```
+4. **Backlog Issues**: `hasBacklogCompletion`
+   - Backlog items shouldn't have completion percentages
 
-### Capacity Overflow Detection
-```typescript
-// Alert triggered when:
-(weekly_capacity_used / max_capacity) > 100%
-```
+5. **Dependency Conflicts**: `hasDependencyConflict`
+   - Work items with overlapping dependencies
+   - Supports acknowledgment system
 
-## 📈 Future Enhancements
+### Capacity System
+- **Percentage-based**: Max capacity is set as a percentage (e.g., 80%)
+- **Color Coding**:
+  - Green: 0-60% of max capacity
+  - Blue: 61-80% of max capacity
+  - Yellow: 81-100% of max capacity
+  - Red: >100% of max capacity
 
-- **Data Persistence**: Save/load project data
-- **Export Features**: PDF reports, Excel exports
-- **Advanced Filtering**: Date ranges, status filters
-- **Resource Leveling**: Automatic capacity optimization
-- **Gantt Chart View**: Alternative timeline visualization
-- **Team Collaboration**: Multi-user editing
-- **Integration**: Jira, Azure DevOps, etc.
+## 🚀 Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm start` - Start production server
+
+### Adding New Features
+
+1. **New Alert Types**: Add logic to `src/utils/calculations.ts`
+2. **UI Components**: Create new components in `src/components/`
+3. **Data Models**: Update interfaces in `src/types/index.ts`
+4. **Sample Data**: Modify `src/data/sampleData.ts` for testing
+
+## 📝 License
+
+This project is open source and available under the [MIT License](LICENSE).
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 License
+## 📞 Support
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-For questions or issues:
-1. Check the documentation above
-2. Review the sample data structure
-3. Open an issue on GitHub
-4. Contact the development team
-
----
-
-**Built with ❤️ for effective project portfolio management** 
+For questions or support, please open an issue on the [GitHub repository](https://github.com/Jordan-Ryan/Portfolio-Management-Tool/issues). 
