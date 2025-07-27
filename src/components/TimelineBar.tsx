@@ -97,22 +97,15 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
         }
         setIsDragging(false);
       }}
-      onClick={(e) => {
+      onClick={() => {
         // Clear any pending drag timeout
         if (dragTimeout) {
           clearTimeout(dragTimeout);
           setDragTimeout(null);
         }
         
-        // Handle click for editing or alert popover
-        if (hasAlert) {
-          // If there are alerts, toggle the popover
-          e.stopPropagation();
-          setIsPopoverOpen(!isPopoverOpen);
-        } else {
-          // If no alerts, edit the work item
-          onEdit(workItem);
-        }
+        // Always edit the work item on click (alert popup is handled by icon click)
+        onEdit(workItem);
       }}
     >
       {/* Background bar */}
@@ -214,6 +207,10 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
           fontSize={12}
           fill="#ef4444"
           className="font-bold cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsPopoverOpen(!isPopoverOpen);
+          }}
         >
           ⚠️
         </text>

@@ -448,11 +448,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                   (e.target as any).dragTimeout = null;
                                 }
                                 
-                                // Only handle click if not clicking on alert button
-                                const target = e.target as Element;
-                                if (!target.closest('[data-alert-icon]') && !target.closest('[data-alert-popover]')) {
-                                  onEdit(workItem);
-                                }
+                                // Always edit the work item on click (alert popup is handled by icon click)
+                                onEdit(workItem);
                               }}
                             >
                               <div className="text-xs font-medium text-gray-900 truncate">{workItem.name}</div>
