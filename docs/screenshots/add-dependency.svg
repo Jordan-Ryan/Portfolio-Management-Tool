@@ -1,0 +1,12 @@
+<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="300" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+      <rect x="50" y="50" width="300" height="200" fill="#fff" stroke="#dee2e6" stroke-width="2"/>
+      <text x="70" y="80" font-family="Arial" font-size="16" fill="#495057" font-weight="bold">Add Dependency</text>
+      <text x="70" y="120" font-family="Arial" font-size="12" fill="#495057">Type:</text>
+      <rect x="70" y="130" width="200" height="30" fill="#f8f9fa" stroke="#dee2e6"/>
+      <text x="80" y="150" font-family="Arial" font-size="12" fill="#495057">Predecessor</text>
+      <text x="70" y="180" font-family="Arial" font-size="12" fill="#495057">Search:</text>
+      <rect x="70" y="190" width="200" height="30" fill="#f8f9fa" stroke="#dee2e6"/>
+      <text x="80" y="210" font-family="Arial" font-size="12" fill="#495057">Work item name...</text>
+      <text x="200" y="250" font-family="Arial" font-size="14" fill="#6c757d">[Add Dependency]</text>
+    </svg>

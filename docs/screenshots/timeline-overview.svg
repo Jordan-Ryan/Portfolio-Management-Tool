@@ -1,0 +1,10 @@
+<svg width="1200" height="400" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="400" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+      <rect x="0" y="0" width="1200" height="40" fill="#e9ecef"/>
+      <text x="20" y="25" font-family="Arial" font-size="12" fill="#495057">Week Headers</text>
+      <rect x="0" y="60" width="300" height="80" fill="#fff" stroke="#dee2e6"/>
+      <text x="20" y="85" font-family="Arial" font-size="14" fill="#495057">E-commerce Platform Redesign</text>
+      <rect x="320" y="60" width="80" height="40" fill="#007bff" opacity="0.8"/>
+      <text x="330" y="85" font-family="Arial" font-size="10" fill="white">UI/UX Design</text>
+      <text x="400" y="200" font-family="Arial" font-size="14" fill="#6c757d">[Timeline Overview]</text>
+    </svg>

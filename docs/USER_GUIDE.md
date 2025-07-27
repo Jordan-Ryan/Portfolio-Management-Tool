@@ -1,5 +1,7 @@
 # Portfolio Management Tool - User Guide
 
+> **📸 Screenshots Note**: The images in this guide are currently placeholder SVGs. To capture real screenshots of the application, please refer to the [Screenshot Capture Guide](scripts/capture-screenshots.md) for detailed instructions on capturing actual application screenshots.
+
 ## 📖 Table of Contents
 
 1. [Getting Started](#getting-started)
@@ -23,7 +25,7 @@ The application has two main sections accessible via the top navigation bar:
 - **Project Roadmap** - Interactive timeline view of all projects and work items
 - **PDT Team Capacity** - Capacity planning and team monitoring
 
-![Navigation Bar](screenshots/navigation.png)
+![Navigation Bar](screenshots/navigation.svg)
 
 ## 📅 Project Roadmap
 
@@ -37,7 +39,7 @@ The timeline displays:
 - **Work Items**: Colored bars representing individual work items
 - **Current Date Line**: Dotted line showing the current week
 
-![Timeline Overview](screenshots/timeline-overview.png)
+![Timeline Overview](screenshots/timeline-overview.svg)
 
 ### Work Item Display
 
@@ -47,7 +49,7 @@ Each work item appears as a colored bar on the timeline showing:
 - **Capacity Percentage**: Allocation percentage
 - **Alert Icons**: ⚠️ indicates issues requiring attention
 
-![Work Items](screenshots/work-items.png)
+![Work Items](screenshots/work-items.svg)
 
 ### Interacting with Work Items
 
@@ -62,14 +64,14 @@ Each work item appears as a colored bar on the timeline showing:
 3. **Release** to drop the work item in its new position
 4. The work item's dates will automatically update
 
-![Drag and Drop](screenshots/drag-drop.png)
+![Drag and Drop](screenshots/drag-drop.svg)
 
 #### **Alert Management**
 - Click the ⚠️ icon on work items to view detailed alerts
 - Alerts show specific issues and recommended actions
 - Use "Acknowledge Dependency" to dismiss dependency alerts
 
-![Alert Popover](screenshots/alert-popover.png)
+![Alert Popover](screenshots/alert-popover.svg)
 
 ### Project Expansion
 
@@ -80,7 +82,7 @@ Projects can be expanded to show more details:
    - **Backlog Column**: Work items not yet scheduled
    - **Timeline Area**: Scheduled work items on the timeline
 
-![Project Expansion](screenshots/project-expansion.png)
+![Project Expansion](screenshots/project-expansion.svg)
 
 ## 👥 PDT Team Capacity
 
@@ -94,7 +96,7 @@ The capacity table displays:
 - **Color Coding**: Visual indicators for capacity levels
 - **Overflow Indicators**: Shows +X% or -X% for capacity differences
 
-![Capacity Table](screenshots/capacity-table.png)
+![Capacity Table](screenshots/capacity-table.svg)
 
 ### Capacity Color Coding
 
@@ -122,7 +124,7 @@ The work item editing modal provides comprehensive management capabilities.
 
 #### **Basic Information Tab**
 
-![Work Item Modal - Basic](screenshots/work-item-modal-basic.png)
+![Work Item Modal - Basic](screenshots/work-item-modal-basic.svg)
 
 **Fields to Edit**:
 - **Name**: Work item title
@@ -135,7 +137,7 @@ The work item editing modal provides comprehensive management capabilities.
 
 #### **Dependencies Tab**
 
-![Work Item Modal - Dependencies](screenshots/work-item-modal-dependencies.png)
+![Work Item Modal - Dependencies](screenshots/work-item-modal-dependencies.svg)
 
 **Predecessors (Dependencies)**:
 - Shows work items that must be completed before this item
@@ -157,7 +159,7 @@ The work item editing modal provides comprehensive management capabilities.
 4. **Select the desired work item** from the dropdown
 5. **Click "Add"** to create the dependency
 
-![Add Dependency](screenshots/add-dependency.png)
+![Add Dependency](screenshots/add-dependency.svg)
 
 ## 🚨 Alert System
 
@@ -193,7 +195,7 @@ The application automatically detects and alerts on various issues.
 - This dismisses the specific alert for that dependency
 - Acknowledged dependencies won't show alerts again
 
-![Alert Acknowledgment](screenshots/alert-acknowledgment.png)
+![Alert Acknowledgment](screenshots/alert-acknowledgment.svg)
 
 ## 🔍 Filtering and Search
 
@@ -206,14 +208,14 @@ The application supports filtering by both PDT teams and projects.
 2. **Select multiple teams** to filter by
 3. **Use "Clear Filter"** to remove all filters
 
-![PDT Team Filter](screenshots/pdt-filter.png)
+![PDT Team Filter](screenshots/pdt-filter.svg)
 
 #### **Project Filter**
 1. **Click the "Project" dropdown** in the top toolbar
 2. **Select multiple projects** to filter by
 3. **Use "Clear Filter"** to remove all filters
 
-![Project Filter](screenshots/project-filter.png)
+![Project Filter](screenshots/project-filter.svg)
 
 ### Filter Behavior
 

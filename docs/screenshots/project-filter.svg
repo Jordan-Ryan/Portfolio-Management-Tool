@@ -1,0 +1,12 @@
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="300" height="200" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+      <rect x="20" y="20" width="260" height="160" fill="#fff" stroke="#dee2e6" stroke-width="2"/>
+      <text x="40" y="50" font-family="Arial" font-size="14" fill="#495057" font-weight="bold">Project Filter</text>
+      <rect x="40" y="70" width="220" height="25" fill="#f8f9fa" stroke="#dee2e6"/>
+      <text x="50" y="87" font-family="Arial" font-size="12" fill="#495057">✓ E-commerce Platform</text>
+      <rect x="40" y="100" width="220" height="25" fill="#f8f9fa" stroke="#dee2e6"/>
+      <text x="50" y="117" font-family="Arial" font-size="12" fill="#495057">Mobile App Development</text>
+      <rect x="40" y="130" width="220" height="25" fill="#f8f9fa" stroke="#dee2e6"/>
+      <text x="50" y="147" font-family="Arial" font-size="12" fill="#495057">Data Analytics Dashboard</text>
+      <text x="150" y="180" font-family="Arial" font-size="14" fill="#6c757d">[Project Filter]</text>
+    </svg>
