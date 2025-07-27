@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { WorkItem, Project, PDTTeam } from '../types';
 import { TimelineBar } from './TimelineBar';
-import { getAllWeeksInYear, getWeekIndex, getDateFromWeekIndex } from '../utils/dateUtils';
+import { getAllWeeksInYear, getWeekIndex, getDateFromWeekIndex, getWeekOffset } from '../utils/dateUtils';
 import { getWorkItemsByProject, sortWorkItemsByPDTAndRow, checkDependencyConflict, getDependencyConflictDetails } from '../utils/calculations';
 
 interface TimelineViewProps {
@@ -281,12 +281,19 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     // so we'll center the work item on the drop position
     const x = e.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
     
-    // Calculate week index from x position (accounting for backlog column)
-    const weekIndex = Math.floor((x - backlogColumnWidth) / weekWidth);
+    // Calculate precise position within the week
+    const timelineX = x - backlogColumnWidth;
+    const weekIndex = Math.floor(timelineX / weekWidth);
+    const weekOffset = (timelineX % weekWidth) / weekWidth; // 0-1 fraction of the week
     
     // Check if drop is in the timeline area (not in backlog area) and within valid weeks
     if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
-      const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+      // Calculate the precise date within the week
+      const weekStart = getDateFromWeekIndex(weekIndex, baseDate);
+      const daysOffset = Math.floor(weekOffset * 7); // Convert fraction to days
+      const newStartDate = new Date(weekStart);
+      newStartDate.setDate(weekStart.getDate() + daysOffset);
+      
       onWorkItemMove(draggedItem.id, newStartDate);
     }
     
@@ -983,11 +990,25 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                             
                             const startWeek = getWeekIndex(workItem.startDate, baseDate);
                             const endWeek = getWeekIndex(workItem.endDate, baseDate);
-                            const duration = endWeek - startWeek + 1;
+                            const startOffset = getWeekOffset(workItem.startDate);
+                            const endOffset = getWeekOffset(workItem.endDate);
                             
-                            const x = startWeek * weekWidth;
+                            // Calculate precise positioning within weeks
+                            const x = (startWeek + startOffset) * weekWidth;
                             const y = projectY + 50 + globalRowIndex * (barHeight + itemSpacing);
-                            const width = duration * weekWidth;
+                            
+                            // Calculate precise width
+                            let width;
+                            if (startWeek === endWeek) {
+                              // Same week - calculate partial width
+                              width = (endOffset - startOffset) * weekWidth;
+                            } else {
+                              // Different weeks - calculate full weeks plus partial weeks
+                              const fullWeeks = endWeek - startWeek - 1;
+                              const startWeekWidth = (1 - startOffset) * weekWidth;
+                              const endWeekWidth = endOffset * weekWidth;
+                              width = startWeekWidth + (fullWeeks * weekWidth) + endWeekWidth;
+                            }
                             
                             globalRowIndex++;
                             

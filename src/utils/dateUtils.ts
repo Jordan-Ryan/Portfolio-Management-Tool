@@ -13,6 +13,15 @@ export const getWeekIndex = (date: Date, baseDate: Date) => {
   return differenceInWeeks(weekStart, baseDate);
 };
 
+export const getWeekOffset = (date: Date) => {
+  // Get the start of the week for the given date
+  const { start: weekStart } = getWeekRange(date);
+  // Calculate how many days into the week the date is (0-6)
+  const daysDiff = Math.floor((date.getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000));
+  // Return the offset as a fraction of the week (0-1)
+  return daysDiff / 7;
+};
+
 export const getDateFromWeekIndex = (weekIndex: number, baseDate: Date) => {
   return addWeeks(baseDate, weekIndex);
 };
