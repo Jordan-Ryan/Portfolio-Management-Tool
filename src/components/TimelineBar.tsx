@@ -12,7 +12,7 @@ interface TimelineBarProps {
   width: number;
   height: number;
   onEdit: (workItem: WorkItem) => void;
-  onDragStart: (e: React.DragEvent | React.MouseEvent, workItem: WorkItem) => void;
+  onDragStart: (e: React.DragEvent | React.MouseEvent, workItem: WorkItem, workItemX?: number) => void;
   onAcknowledgeDependency: (workItemId: string, dependencyId: string) => void;
 }
 
@@ -92,7 +92,7 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
         if (workItem.startDate && workItem.endDate) {
           const timeout = window.setTimeout(() => {
             setIsDragging(true);
-            onDragStart(e as any, workItem);
+            onDragStart(e as any, workItem, x);
           }, 2000); // 2 second delay
           setDragTimeout(timeout);
         }

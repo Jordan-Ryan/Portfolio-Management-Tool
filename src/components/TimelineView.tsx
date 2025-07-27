@@ -210,7 +210,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     }
   }, [totalWidth, totalHeight]);
 
-  const handleDragStart = (e: React.DragEvent | React.MouseEvent, workItem: WorkItem) => {
+  const handleDragStart = (e: React.DragEvent | React.MouseEvent, workItem: WorkItem, workItemX?: number) => {
     setDraggedItem(workItem);
     
     // If it's a mouse event (timeline items), start mouse-based dragging
@@ -226,9 +226,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       if (!containerRect) return;
       
       // Calculate the initial click position relative to the work item
-      const workItemElement = mouseEvent.currentTarget as SVGGElement;
-      const workItemRect = workItemElement.getBoundingClientRect();
-      const clickOffsetX = mouseEvent.clientX - workItemRect.left;
+      // Use the work item's x position if provided, otherwise use a simple offset
+      const clickOffsetX = workItemX !== undefined 
+        ? mouseEvent.clientX - (containerRect.left + workItemX)
+        : 0;
       
       // Add visual feedback
       document.body.style.cursor = 'grabbing';
