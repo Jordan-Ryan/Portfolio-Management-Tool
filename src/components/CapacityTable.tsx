@@ -54,7 +54,7 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
   const getOverflowText = (percentage: number, maxCapacity: number) => {
     if (percentage > maxCapacity) {
       return `+${(percentage - maxCapacity).toFixed(0)}%`;
-    } else if (percentage < maxCapacity * 0.6) {
+    } else if (percentage < maxCapacity) {
       return `-${(maxCapacity - percentage).toFixed(0)}%`;
     }
     return null;
@@ -140,13 +140,16 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
                   {weeks.map((_, weekIndex) => {
                     const percentage = getCapacityPercentage(team, weekIndex);
                     const overflowText = getOverflowText(percentage, team.maxCapacity);
+                    const isOverCapacity = percentage > team.maxCapacity;
+                    const isUnderCapacity = percentage < team.maxCapacity;
+                    
                     return (
                       <td key={weekIndex} className="px-2 py-3 text-center border-r border-gray-200">
-                        <div className={`text-xs font-medium px-2 py-1 rounded border ${getCellColor(percentage, team.maxCapacity)} relative`}>
-                          <div>{percentage.toFixed(0)}%</div>
+                        <div className={`text-xs font-medium px-2 py-1 rounded border ${getCellColor(percentage, team.maxCapacity)}`}>
+                          <div className="font-semibold">{percentage.toFixed(0)}%</div>
                           {overflowText && (
                             <div className={`text-xs font-bold ${
-                              percentage > team.maxCapacity ? 'text-red-700' : 'text-green-700'
+                              isOverCapacity ? 'text-red-700' : 'text-green-700'
                             }`}>
                               {overflowText}
                             </div>
@@ -164,22 +167,27 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
       
       <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
         <div className="flex items-center justify-between text-sm text-gray-600">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
-              <span>0-60% of max (under-utilized)</span>
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
+                <span>0-60% of max</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div>
+                <span>60-80% of max</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded"></div>
+                <span>80-100% of max</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
+                <span>Over max capacity</span>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div>
-              <span>60-80% of max</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded"></div>
-              <span>80-100% of max</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-red-100 border border-red-300 rounded"></div>
-              <span>Over max capacity</span>
+            <div className="text-xs text-gray-500">
+              Overflow indicators: <span className="text-red-700 font-semibold">+X%</span> for over capacity, <span className="text-green-700 font-semibold">-X%</span> for under capacity
             </div>
           </div>
           <div>
