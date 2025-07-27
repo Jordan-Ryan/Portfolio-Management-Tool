@@ -73,7 +73,26 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
   
   const hasAlert = hasDelay || hasDependencyConflict || hasFutureCompletion || hasBacklogCompletion || hasPastIncomplete;
 
-
+  // Helper function to truncate text with ellipsis
+  const truncateText = (text: string, maxWidth: number, fontSize: number = 12) => {
+    // More accurate character width estimation based on font size
+    const charWidth = fontSize * 0.55; // Slightly more conservative estimate
+    const maxChars = Math.floor(maxWidth / charWidth);
+    
+    if (text.length <= maxChars) {
+      return text;
+    }
+    
+    // Leave space for ellipsis
+    const ellipsisChars = 3;
+    const availableChars = Math.max(0, maxChars - ellipsisChars);
+    
+    if (availableChars <= 0) {
+      return '...';
+    }
+    
+    return text.substring(0, availableChars) + '...';
+  };
 
   const progressWidth = (workItem.completedPercentage / 100) * width;
   const progressColor = workItem.completedPercentage === 100 
@@ -190,7 +209,7 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
         fill="#374151"
         className="font-medium"
       >
-        {workItem.name}
+        {truncateText(workItem.name, width - (hasAlert ? 25 : 8) - 8, 12)}
       </text>
       
       {/* PDT Team name */}
@@ -200,7 +219,7 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
         fontSize={10}
         fill="#6b7280"
       >
-        {pdtTeam.name} • {workItem.capacity}% • {workItem.duration}w
+        {truncateText(`${pdtTeam.name} • ${workItem.capacity}% • ${workItem.duration}w`, width - (hasAlert ? 25 : 8) - 8, 10)}
       </text>
       
       {/* Progress percentage */}
@@ -212,7 +231,7 @@ export const TimelineBar: React.FC<TimelineBarProps> = ({
         textAnchor="end"
         className="font-medium"
       >
-        {workItem.completedPercentage}%
+        {truncateText(`${workItem.completedPercentage}%`, 40, 11)}
       </text>
       
       {/* Alert indicator */}
