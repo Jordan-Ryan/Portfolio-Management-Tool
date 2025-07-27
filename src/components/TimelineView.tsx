@@ -171,8 +171,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       }
     }
     
-    // Always add height for backlog items in backlog section
-    if (projectBacklogItems.length > 0) {
+    // Add height for backlog items only when expanded (same as timeline)
+    if (isExpanded && projectBacklogItems.length > 0) {
       projectHeight += projectBacklogItems.length * 60 + 10; // 60px per backlog item + padding
     }
     
