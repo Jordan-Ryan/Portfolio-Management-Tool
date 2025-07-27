@@ -209,7 +209,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     }
   }, [totalWidth, totalHeight]);
 
-  const handleDragStart = (e: React.DragEvent | React.MouseEvent, workItem: WorkItem, workItemX?: number) => {
+  const handleDragStart = (e: React.DragEvent | React.MouseEvent, workItem: WorkItem) => {
     setDraggedItem(workItem);
     
     // If it's a mouse event (timeline items), start 2-second hold timer
@@ -231,23 +231,21 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           setGhostItem(prev => prev ? { ...prev, x: moveEvent.clientX, y: moveEvent.clientY } : null);
         };
         
-        const handleMouseUp = () => {
+        const handleMouseUp = (dropEvent: MouseEvent) => {
           document.removeEventListener('mousemove', handleMouseMove);
           document.removeEventListener('mouseup', handleMouseUp);
           document.body.style.cursor = '';
           
-          // Handle drop
-          if (ghostItem) {
-            const containerRect = containerRef.current?.getBoundingClientRect();
-            if (containerRect) {
-              const x = ghostItem.x - containerRect.left + (containerRef.current?.scrollLeft || 0);
-              const timelineX = x - backlogColumnWidth;
-              const weekIndex = Math.floor(timelineX / weekWidth);
-              
-              if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
-                const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
-                onWorkItemMove(ghostItem.workItem.id, newStartDate);
-              }
+          // Handle drop using the current mouse position
+          const containerRect = containerRef.current?.getBoundingClientRect();
+          if (containerRect) {
+            const x = dropEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
+            const timelineX = x - backlogColumnWidth;
+            const weekIndex = Math.floor(timelineX / weekWidth);
+            
+            if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
+              const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+              onWorkItemMove(workItem.id, newStartDate);
             }
           }
           
@@ -644,23 +642,21 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                     setGhostItem(prev => prev ? { ...prev, x: moveEvent.clientX, y: moveEvent.clientY } : null);
                                   };
                                   
-                                  const handleMouseUp = () => {
+                                  const handleMouseUp = (dropEvent: MouseEvent) => {
                                     document.removeEventListener('mousemove', handleMouseMove);
                                     document.removeEventListener('mouseup', handleMouseUp);
                                     document.body.style.cursor = '';
                                     
-                                    // Handle drop
-                                    if (ghostItem) {
-                                      const containerRect = containerRef.current?.getBoundingClientRect();
-                                      if (containerRect) {
-                                        const x = ghostItem.x - containerRect.left + (containerRef.current?.scrollLeft || 0);
-                                        const timelineX = x - backlogColumnWidth;
-                                        const weekIndex = Math.floor(timelineX / weekWidth);
-                                        
-                                        if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
-                                          const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
-                                          onWorkItemMove(ghostItem.workItem.id, newStartDate);
-                                        }
+                                    // Handle drop using the current mouse position
+                                    const containerRect = containerRef.current?.getBoundingClientRect();
+                                    if (containerRect) {
+                                      const x = dropEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
+                                      const timelineX = x - backlogColumnWidth;
+                                      const weekIndex = Math.floor(timelineX / weekWidth);
+                                      
+                                      if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
+                                        const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+                                        onWorkItemMove(workItem.id, newStartDate);
                                       }
                                     }
                                     
