@@ -21,8 +21,9 @@ The drag and drop system has been completely redesigned to provide a better user
 ### **3. Drop Placement**
 - **Drag ghost item** to desired timeline position
 - **Release mouse** to drop the item
-- **Item appears** at the new location
+- **Item appears** at the new location with updated dates
 - **Precise positioning** within weeks and dates
+- **Data updates** - work item dates and position are properly saved
 
 ## 🔧 **Technical Implementation**
 
@@ -50,9 +51,25 @@ const timeout = window.setTimeout(() => {
   };
   
   // Mouse up handler for drop
-  const handleMouseUp = () => {
-    // Handle drop logic
-    // Calculate new position and update work item
+  const handleMouseUp = (dropEvent: MouseEvent) => {
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = '';
+    
+    // Handle drop using the current mouse position
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    if (containerRect) {
+      const x = dropEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
+      const timelineX = x - backlogColumnWidth;
+      const weekIndex = Math.floor(timelineX / weekWidth);
+      
+      if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
+        const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+        onWorkItemMove(workItem.id, newStartDate);
+      }
+    }
+    
+    setGhostItem(null);
   };
 }, 2000); // 2 seconds
 ```
