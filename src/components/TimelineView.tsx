@@ -125,7 +125,53 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       }
     }
     
-    // Add height for backlog items (if any) - this ensures both sections match
+    // Add height for backlog items (if any) - but only when expanded
+    // When collapsed, backlog items don't affect the timeline height
+    if (isExpanded && projectBacklogItems.length > 0) {
+      projectHeight += projectBacklogItems.length * 60 + 10; // 60px per backlog item + padding
+    }
+    
+    return projectHeight;
+  };
+  
+  // Function to calculate backlog height (always includes backlog items)
+  const calculateBacklogHeight = (projectId: string) => {
+    const isExpanded = expandedProjects.has(projectId);
+    const projectItems = getWorkItemsByProject(filteredWorkItems, projectId)
+      .filter(item => !item.isInBacklog);
+    const projectBacklogItems = backlogItems.filter(item => item.projectId === projectId);
+    
+    let projectHeight = 50; // Base header height
+    
+    if (isExpanded) {
+      const sortedItems = sortWorkItemsByPDTAndRow(projectItems);
+      const pdtGroups: { [pdtTeamId: string]: WorkItem[] } = {};
+      
+      sortedItems.forEach(workItem => {
+        if (!workItem.startDate || !workItem.endDate) return;
+        if (!pdtGroups[workItem.pdtTeamId]) {
+          pdtGroups[workItem.pdtTeamId] = [];
+        }
+        pdtGroups[workItem.pdtTeamId].push(workItem);
+      });
+      
+      let totalWorkItems = 0;
+      Object.keys(pdtGroups).forEach(pdtTeamId => {
+        const pdtItems = pdtGroups[pdtTeamId];
+        totalWorkItems += pdtItems.length;
+      });
+      
+      // Add height for timeline work items
+      projectHeight += totalWorkItems * (barHeight + itemSpacing) + 20;
+    } else {
+      // Collapsed project - check if there are timeline items to show info
+      const hasTimelineInfo = projectItems.some(item => item.startDate && item.endDate);
+      if (hasTimelineInfo) {
+        projectHeight = 70; // Extra height for timeline info
+      }
+    }
+    
+    // Always add height for backlog items in backlog section
     if (projectBacklogItems.length > 0) {
       projectHeight += projectBacklogItems.length * 60 + 10; // 60px per backlog item + padding
     }
@@ -323,8 +369,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 const projectBacklogItems = backlogItems.filter(item => item.projectId === group.project.id);
                 const isExpanded = expandedProjects.has(group.project.id);
                 
-                // Use the same height calculation function for consistency
-                const projectHeight = calculateProjectHeight(group.project.id);
+                // Use the backlog height calculation function (always includes backlog items)
+                const projectHeight = calculateBacklogHeight(group.project.id);
                 
                 const backlogY = currentBacklogY;
                 currentBacklogY += projectHeight + 10; // Match timeline spacing
