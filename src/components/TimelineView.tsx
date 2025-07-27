@@ -11,9 +11,11 @@ interface TimelineViewProps {
   projects: Project[];
   pdtTeams: PDTTeam[];
   selectedPDTFilter: string[];
+  selectedProjectFilter: string[];
   onEdit: (workItem: WorkItem) => void;
   onWorkItemMove: (workItemId: string, newStartDate: Date) => void;
   onPDTFilterChange: (pdtTeamIds: string[]) => void;
+  onProjectFilterChange: (projectIds: string[]) => void;
   onAcknowledgeDependency: (workItemId: string, dependencyId: string) => void;
 }
 
@@ -22,13 +24,16 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   projects,
   pdtTeams,
   selectedPDTFilter,
+  selectedProjectFilter,
   onEdit,
   onWorkItemMove,
   onPDTFilterChange,
+  onProjectFilterChange,
   onAcknowledgeDependency
 }) => {
   const [openBacklogPopover, setOpenBacklogPopover] = useState<string | null>(null);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const [isProjectFilterDropdownOpen, setIsProjectFilterDropdownOpen] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -46,9 +51,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         setOpenBacklogPopover(null);
       }
       
-      // Handle filter dropdown
+      // Handle filter dropdowns
       if (isFilterDropdownOpen && !target.closest('[data-filter-dropdown]')) {
         setIsFilterDropdownOpen(false);
+      }
+      if (isProjectFilterDropdownOpen && !target.closest('[data-project-filter-dropdown]')) {
+        setIsProjectFilterDropdownOpen(false);
       }
     };
 
@@ -56,7 +64,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [openBacklogPopover, isFilterDropdownOpen]);
+  }, [openBacklogPopover, isFilterDropdownOpen, isProjectFilterDropdownOpen]);
   const [draggedItem, setDraggedItem] = useState<WorkItem | null>(null);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
@@ -64,15 +72,20 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const weeks = getAllWeeksInYear(new Date().getFullYear()); // All 52 weeks of the year
   const baseDate = weeks[0].start; // First week as base date
   
-  // Filter work items based on PDT filter
-  const filteredWorkItems = selectedPDTFilter.length > 0
-    ? workItems.filter(item => selectedPDTFilter.includes(item.pdtTeamId))
-    : workItems;
+  // Filter work items based on PDT and Project filters
+  const filteredWorkItems = workItems.filter(item => {
+    const matchesPDT = selectedPDTFilter.length === 0 || selectedPDTFilter.includes(item.pdtTeamId);
+    const matchesProject = selectedProjectFilter.length === 0 || selectedProjectFilter.includes(item.projectId);
+    return matchesPDT && matchesProject;
+  });
 
-  // Get backlog items for inline display - apply PDT filter
-  const backlogItems = selectedPDTFilter.length > 0
-    ? workItems.filter(item => item.isInBacklog && selectedPDTFilter.includes(item.pdtTeamId))
-    : workItems.filter(item => item.isInBacklog);
+  // Get backlog items for inline display - apply PDT and Project filters
+  const backlogItems = workItems.filter(item => {
+    const isInBacklog = item.isInBacklog;
+    const matchesPDT = selectedPDTFilter.length === 0 || selectedPDTFilter.includes(item.pdtTeamId);
+    const matchesProject = selectedProjectFilter.length === 0 || selectedProjectFilter.includes(item.projectId);
+    return isInBacklog && matchesPDT && matchesProject;
+  });
 
   // Group work items by project
   const projectGroups = projects
@@ -328,68 +341,152 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Project Roadmap</h3>
             <p className="text-sm text-gray-600 mt-1">
-              {selectedPDTFilter.length > 0
-                ? `Filtered by: ${selectedPDTFilter.map(id => getPDTTeam(id)?.name).join(', ')}`
-                : 'All PDT teams'
+              {selectedPDTFilter.length > 0 || selectedProjectFilter.length > 0
+                ? `Filtered by: ${[
+                    ...selectedPDTFilter.map(id => getPDTTeam(id)?.name),
+                    ...selectedProjectFilter.map(id => projects.find(p => p.id === id)?.name)
+                  ].filter(Boolean).join(', ')}`
+                : 'All teams and projects'
               }
             </p>
           </div>
           
-          {/* PDT Filter Multi-Select */}
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">
-              Filter by PDT:
-            </label>
-            <div className="relative" data-filter-dropdown>
-              <button
-                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                className="flex items-center justify-between w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-              >
-                <span className="truncate">
-                  {selectedPDTFilter.length === 0 
-                    ? 'All PDT Teams' 
-                    : selectedPDTFilter.length === 1
-                    ? pdtTeams.find(t => t.id === selectedPDTFilter[0])?.name
-                    : `${selectedPDTFilter.length} teams selected`
-                  }
-                </span>
-                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {isFilterDropdownOpen && (
-                <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2">
-                    <label className="flex items-center p-2 hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedPDTFilter.length === 0}
-                        onChange={() => onPDTFilterChange([])}
-                        className="mr-2"
-                      />
-                      <span className="text-sm">All PDT Teams</span>
-                    </label>
-                    {pdtTeams.map((team) => (
-                      <label key={team.id} className="flex items-center p-2 hover:bg-gray-50 cursor-pointer">
+          {/* Filters */}
+          <div className="flex items-center space-x-4">
+            {/* PDT Filter Multi-Select */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">
+                Filter by PDT:
+              </label>
+              <div className="relative" data-filter-dropdown>
+                <button
+                  onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                  className="flex items-center justify-between w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <span className="truncate">
+                    {selectedPDTFilter.length === 0 
+                      ? 'All PDT Teams' 
+                      : selectedPDTFilter.length === 1
+                      ? pdtTeams.find(t => t.id === selectedPDTFilter[0])?.name
+                      : `${selectedPDTFilter.length} teams selected`
+                    }
+                  </span>
+                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isFilterDropdownOpen && (
+                  <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="p-2">
+                      <label className="flex items-center p-2 hover:bg-gray-50 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={selectedPDTFilter.includes(team.id)}
-                          onChange={() => {
-                            if (selectedPDTFilter.includes(team.id)) {
-                              onPDTFilterChange(selectedPDTFilter.filter(id => id !== team.id));
-                            } else {
-                              onPDTFilterChange([...selectedPDTFilter, team.id]);
-                            }
-                          }}
+                          checked={selectedPDTFilter.length === 0}
+                          onChange={() => onPDTFilterChange([])}
                           className="mr-2"
                         />
-                        <span className="text-sm">{team.name}</span>
+                        <span className="text-sm">All PDT Teams</span>
                       </label>
-                    ))}
+                      {pdtTeams.map((team) => (
+                        <label key={team.id} className="flex items-center p-2 hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedPDTFilter.includes(team.id)}
+                            onChange={() => {
+                              if (selectedPDTFilter.includes(team.id)) {
+                                onPDTFilterChange(selectedPDTFilter.filter(id => id !== team.id));
+                              } else {
+                                onPDTFilterChange([...selectedPDTFilter, team.id]);
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">{team.name}</span>
+                        </label>
+                      ))}
+                      {(selectedPDTFilter.length > 0) && (
+                        <div className="border-t border-gray-200 mt-2 pt-2">
+                          <button
+                            onClick={() => onPDTFilterChange([])}
+                            className="w-full text-left px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                          >
+                            Clear Filter
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+
+            {/* Project Filter Multi-Select */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">
+                Filter by Project:
+              </label>
+              <div className="relative" data-project-filter-dropdown>
+                <button
+                  onClick={() => setIsProjectFilterDropdownOpen(!isProjectFilterDropdownOpen)}
+                  className="flex items-center justify-between w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <span className="truncate">
+                    {selectedProjectFilter.length === 0 
+                      ? 'All Projects' 
+                      : selectedProjectFilter.length === 1
+                      ? projects.find(p => p.id === selectedProjectFilter[0])?.name
+                      : `${selectedProjectFilter.length} projects selected`
+                    }
+                  </span>
+                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isProjectFilterDropdownOpen && (
+                  <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div className="p-2">
+                      <label className="flex items-center p-2 hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedProjectFilter.length === 0}
+                          onChange={() => onProjectFilterChange([])}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">All Projects</span>
+                      </label>
+                      {projects.map((project) => (
+                        <label key={project.id} className="flex items-center p-2 hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedProjectFilter.includes(project.id)}
+                            onChange={() => {
+                              if (selectedProjectFilter.includes(project.id)) {
+                                onProjectFilterChange(selectedProjectFilter.filter(id => id !== project.id));
+                              } else {
+                                onProjectFilterChange([...selectedProjectFilter, project.id]);
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">{project.name}</span>
+                        </label>
+                      ))}
+                      {(selectedProjectFilter.length > 0) && (
+                        <div className="border-t border-gray-200 mt-2 pt-2">
+                          <button
+                            onClick={() => onProjectFilterChange([])}
+                            className="w-full text-left px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                          >
+                            Clear Filter
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

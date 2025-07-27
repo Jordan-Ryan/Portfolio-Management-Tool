@@ -96,6 +96,16 @@ export const CapacityPage: React.FC<CapacityPageProps> = ({
                           <span className="text-sm">{team.name}</span>
                         </label>
                       ))}
+                      {(selectedPDTFilter.length > 0) && (
+                        <div className="border-t border-gray-200 mt-2 pt-2">
+                          <button
+                            onClick={() => onPDTFilterChange([])}
+                            className="w-full text-left px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                          >
+                            Clear Filter
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

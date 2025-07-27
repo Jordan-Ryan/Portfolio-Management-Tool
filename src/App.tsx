@@ -16,6 +16,7 @@ function App() {
   const [workItems, setWorkItems] = useState<WorkItem[]>(sampleWorkItems);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedPDTFilter, setSelectedPDTFilter] = useState<string[]>([]);
+  const [selectedProjectFilter, setSelectedProjectFilter] = useState<string[]>([]);
   const [editingWorkItem, setEditingWorkItem] = useState<WorkItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAlertsPopoverOpen, setIsAlertsPopoverOpen] = useState(false);
@@ -157,9 +158,11 @@ function App() {
               projects={projects}
               pdtTeams={pdtTeams}
               selectedPDTFilter={selectedPDTFilter}
+              selectedProjectFilter={selectedProjectFilter}
               onEdit={handleEdit}
               onWorkItemMove={handleWorkItemMove}
               onPDTFilterChange={(pdtTeamIds) => setSelectedPDTFilter(pdtTeamIds)}
+              onProjectFilterChange={(projectIds) => setSelectedProjectFilter(projectIds)}
               onAcknowledgeDependency={handleAcknowledgeDependency}
             />
           </div>
