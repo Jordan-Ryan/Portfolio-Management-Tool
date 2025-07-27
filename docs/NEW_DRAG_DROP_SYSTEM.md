@@ -9,8 +9,8 @@ The drag and drop system has been completely redesigned to provide a better user
 ### **1. 2-Second Hold to Activate**
 - **Hold down** on any work item (timeline or backlog) for 2 seconds
 - **Visual feedback** - cursor changes to "grabbing" after 2 seconds
-- **Item disappears** from its original location
-- **Ghost item appears** following the mouse cursor
+- **Original item disappears** from timeline/backlog (no duplicates)
+- **Ghost item appears** following the mouse cursor with identical styling
 
 ### **2. Ghost Item Visualization**
 - **Identical to TimelineBar** - exact same visual styling and layout
@@ -158,7 +158,7 @@ const timeout = window.setTimeout(() => {
 
 ### **Visual Feedback:**
 - ✅ **Cursor changes** to "grabbing" after 2 seconds
-- ✅ **Item disappears** from original location
+- ✅ **Original item disappears** from timeline/backlog (no duplicates)
 - ✅ **Ghost item follows** mouse cursor with identical TimelineBar styling
 - ✅ **Full work item information** - name, team, progress, alerts
 - ✅ **Progress bar visualization** - shows completion with color coding
