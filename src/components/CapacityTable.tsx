@@ -51,6 +51,15 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
     return 'bg-green-100 text-green-800 border-green-300';
   };
 
+  const getOverflowText = (percentage: number, maxCapacity: number) => {
+    if (percentage > maxCapacity) {
+      return `+${(percentage - maxCapacity).toFixed(0)}%`;
+    } else if (percentage < maxCapacity * 0.6) {
+      return `-${(maxCapacity - percentage).toFixed(0)}%`;
+    }
+    return null;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       <div className="px-6 py-4 border-b border-gray-200">
@@ -130,16 +139,19 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
                   </td>
                   {weeks.map((_, weekIndex) => {
                     const percentage = getCapacityPercentage(team, weekIndex);
+                    const overflowText = getOverflowText(percentage, team.maxCapacity);
                     return (
                       <td key={weekIndex} className="px-2 py-3 text-center border-r border-gray-200">
-                        <div className={`text-xs font-medium px-2 py-1 rounded border ${getCellColor(percentage, team.maxCapacity)}`}>
-                          {percentage.toFixed(0)}%
+                        <div className={`text-xs font-medium px-2 py-1 rounded border ${getCellColor(percentage, team.maxCapacity)} relative`}>
+                          <div>{percentage.toFixed(0)}%</div>
+                          {overflowText && (
+                            <div className={`text-xs font-bold ${
+                              percentage > team.maxCapacity ? 'text-red-700' : 'text-green-700'
+                            }`}>
+                              {overflowText}
+                            </div>
+                          )}
                         </div>
-                        {percentage > team.maxCapacity && (
-                          <div className="text-xs text-red-600 font-medium mt-1">
-                            +{(percentage - team.maxCapacity).toFixed(0)}%
-                          </div>
-                        )}
                       </td>
                     );
                   })}
@@ -155,7 +167,7 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
-              <span>0-60% of max</span>
+              <span>0-60% of max (under-utilized)</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded"></div>

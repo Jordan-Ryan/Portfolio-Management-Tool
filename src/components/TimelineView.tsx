@@ -61,8 +61,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     ? workItems.filter(item => item.pdtTeamId === selectedPDTFilter)
     : workItems;
 
-  // Get backlog items for inline display
-  const backlogItems = workItems.filter(item => item.isInBacklog);
+  // Get backlog items for inline display - apply PDT filter
+  const backlogItems = selectedPDTFilter 
+    ? workItems.filter(item => item.isInBacklog && item.pdtTeamId === selectedPDTFilter)
+    : workItems.filter(item => item.isInBacklog);
 
   // Group work items by project
   const projectGroups = projects
@@ -333,7 +335,18 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                     totalWorkItems += pdtItems.length;
                   });
                   
+                  // Add height for timeline work items
                   projectHeight += totalWorkItems * (barHeight + itemSpacing) + 20;
+                  
+                  // Add height for backlog items (if any)
+                  if (projectBacklogItems.length > 0) {
+                    projectHeight += projectBacklogItems.length * 60 + 10; // 60px per backlog item + padding
+                  }
+                } else {
+                  // Even when collapsed, ensure we have space for backlog items
+                  if (projectBacklogItems.length > 0) {
+                    projectHeight += projectBacklogItems.length * 60 + 10;
+                  }
                 }
                 
                 const backlogY = currentBacklogY;
