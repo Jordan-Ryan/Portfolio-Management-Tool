@@ -13,9 +13,12 @@ The drag and drop system has been completely redesigned to provide a better user
 - **Ghost item appears** following the mouse cursor
 
 ### **2. Ghost Item Visualization**
-- **Blue floating element** follows the mouse cursor
-- **Shows work item name** for clear identification
-- **Correct width** - matches the actual work item duration
+- **Identical to TimelineBar** - exact same visual styling and layout
+- **Full work item information** - name, PDT team, capacity, duration, progress
+- **Progress bar** - shows completion percentage with color coding
+- **Alert indicators** - displays warning icons for issues
+- **Border styling** - shows delayed, dependency conflict, and incomplete borders
+- **Correct width and height** - matches the actual work item dimensions
 - **Precise positioning** - drops exactly where the ghost appears
 - **Semi-transparent** so it doesn't block the view
 - **No text selection** - prevents highlighting during drag
@@ -82,38 +85,58 @@ const timeout = window.setTimeout(() => {
   const workItem = ghostItem.workItem;
   if (!workItem.startDate || !workItem.endDate) return null;
   
-  const startWeek = getWeekIndex(workItem.startDate, baseDate);
-  const endWeek = getWeekIndex(workItem.endDate, baseDate);
-  const startOffset = getWeekOffset(workItem.startDate);
-  const endOffset = getWeekOffset(workItem.endDate);
+  // Calculate width, progress, colors, and alerts (identical to TimelineBar)
+  const width = calculateWorkItemWidth(workItem);
+  const progressWidth = (workItem.completedPercentage / 100) * width;
+  const progressColor = workItem.completedPercentage === 100 
+    ? '#22c55e' 
+    : workItem.completedPercentage > 50 
+    ? '#3b82f6' 
+    : '#f59e0b';
   
-  // Calculate precise width for ghost item
-  let width;
-  if (startWeek === endWeek) {
-    width = (endOffset - startOffset) * weekWidth;
-  } else {
-    const fullWeeks = endWeek - startWeek - 1;
-    const startWeekWidth = (1 - startOffset) * weekWidth;
-    const endWeekWidth = endOffset * weekWidth;
-    width = startWeekWidth + (fullWeeks * weekWidth) + endWeekWidth;
-  }
+  // Check for all alert types (identical to TimelineBar)
+  const hasDelay = calculateProgressDelay(workItem);
+  const hasDependencyConflict = checkDependencyConflict(workItem, workItems);
+  const hasAlert = hasDelay || hasDependencyConflict || /* other alerts */;
   
   return (
-    <div
-      className="fixed pointer-events-none z-50 bg-blue-500 text-white px-3 py-1 rounded shadow-lg opacity-80"
+    <svg
+      className="fixed pointer-events-none z-50"
       style={{
         left: ghostItem.x,
-        top: ghostItem.y - 20,
+        top: ghostItem.y - barHeight / 2,
         width: `${width}px`,
-        transform: 'translate(0, -50%)',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        MozUserSelect: 'none',
-        msUserSelect: 'none'
+        height: `${barHeight}px`
       }}
     >
-      {workItem.name}
-    </div>
+      {/* Background bar */}
+      <rect width={width} height={barHeight} rx={4} fill="#f3f4f6" stroke="#d1d5db" strokeWidth={1} opacity={0.9} />
+      
+      {/* Progress fill */}
+      <rect width={progressWidth} height={barHeight} rx={4} fill={progressColor} opacity={0.8} />
+      
+      {/* Alert borders */}
+      {hasDelay && <rect width={width} height={barHeight} rx={4} fill="none" stroke="#ef4444" strokeWidth={2} strokeDasharray="4" />}
+      {hasDependencyConflict && <rect width={width} height={barHeight} rx={4} fill="none" stroke="#dc2626" strokeWidth={2} />}
+      
+      {/* Text content */}
+      <text x={hasAlert ? 25 : 8} y={barHeight / 2 + 4} fontSize={12} fill="#374151">
+        {truncateText(workItem.name, width - (hasAlert ? 25 : 8) - 8, 12)}
+      </text>
+      
+      {/* PDT Team info */}
+      <text x={hasAlert ? 25 : 8} y={barHeight - 4} fontSize={10} fill="#6b7280">
+        {truncateText(`${pdtTeam.name} • ${workItem.capacity}% • ${workItem.duration}w`, width - (hasAlert ? 25 : 8) - 8, 10)}
+      </text>
+      
+      {/* Progress percentage */}
+      <text x={width - 8} y={barHeight / 2 + 4} fontSize={11} fill="#374151" textAnchor="end">
+        {truncateText(`${workItem.completedPercentage}%`, 40, 11)}
+      </text>
+      
+      {/* Alert indicator */}
+      {hasAlert && <text x={8} y={barHeight / 2 + 4} fontSize={12} fill="#ef4444">⚠️</text>}
+    </svg>
   );
 })()}
 ```
@@ -136,7 +159,10 @@ const timeout = window.setTimeout(() => {
 ### **Visual Feedback:**
 - ✅ **Cursor changes** to "grabbing" after 2 seconds
 - ✅ **Item disappears** from original location
-- ✅ **Ghost item follows** mouse cursor with correct width
+- ✅ **Ghost item follows** mouse cursor with identical TimelineBar styling
+- ✅ **Full work item information** - name, team, progress, alerts
+- ✅ **Progress bar visualization** - shows completion with color coding
+- ✅ **Alert indicators** - displays warning icons and border styling
 - ✅ **Precise positioning** - drops exactly where ghost appears
 - ✅ **No text selection** - prevents highlighting during drag
 - ✅ **Smooth animations** and transitions
