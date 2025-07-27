@@ -228,7 +228,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       // Calculate the initial click position relative to the work item
       // This represents where within the work item the user clicked
       const clickOffsetX = workItemX !== undefined 
-        ? mouseEvent.clientX - (containerRect.left + workItemX)
+        ? mouseEvent.clientX - (containerRect.left + workItemX + (containerRef.current?.scrollLeft || 0))
         : 0;
       
       // Add visual feedback
