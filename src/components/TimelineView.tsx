@@ -625,6 +625,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                     {isExpanded && projectBacklogItems.length > 0 && (
                       <div className="px-4 pb-2">
                         {projectBacklogItems.map((workItem) => {
+                          // Hide the backlog item if it's being dragged as a ghost
+                          if (ghostItem && ghostItem.workItem.id === workItem.id) {
+                            return null;
+                          }
+                          
                           const pdtTeam = getPDTTeam(workItem.pdtTeamId);
                           const hasBacklogCompletion = workItem.isInBacklog && workItem.completedPercentage > 0;
                           const hasDependencyConflict = checkDependencyConflict(workItem, workItems);
@@ -1121,6 +1126,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                             }
                             
                             globalRowIndex++;
+                            
+                            // Hide the original TimelineBar if this work item is being dragged as a ghost
+                            if (ghostItem && ghostItem.workItem.id === workItem.id) {
+                              return null;
+                            }
                             
                             return (
                               <TimelineBar
