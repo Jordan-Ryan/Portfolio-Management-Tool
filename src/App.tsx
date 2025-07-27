@@ -43,18 +43,24 @@ function App() {
 
   const handleWorkItemMove = (workItemId: string, newStartDate: Date) => {
     setWorkItems(prev => {
-      return prev.map(item => {
+      const updatedItems = prev.map(item => {
         if (item.id === workItemId) {
           const newEndDate = addWeeks(newStartDate, item.duration);
           return {
             ...item,
             startDate: newStartDate,
             endDate: newEndDate,
-            isInBacklog: false
+            isInBacklog: false,
+            // Ensure the item has all necessary properties for timeline display
+            completedPercentage: item.completedPercentage || 0,
+            dependencies: item.dependencies || [],
+            successors: item.successors || []
           };
         }
         return item;
       });
+      
+      return updatedItems;
     });
   };
 
