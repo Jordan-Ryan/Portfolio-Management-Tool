@@ -247,11 +247,17 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           if (containerRect) {
             const x = dropEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
             
-            // Since containerRef is the timeline area (after backlog), we don't need to subtract backlog width
+            // Calculate precise position within the week
             const weekIndex = Math.floor(x / weekWidth);
+            const weekOffset = (x % weekWidth) / weekWidth; // 0-1 fraction of the week
             
             if (weekIndex >= 0 && weekIndex < weeks.length) {
-              const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+              // Calculate the precise date within the week
+              const weekStart = getDateFromWeekIndex(weekIndex, baseDate);
+              const daysOffset = Math.floor(weekOffset * 7); // Convert fraction to days
+              const newStartDate = new Date(weekStart);
+              newStartDate.setDate(weekStart.getDate() + daysOffset);
+              
               onWorkItemMove(workItem.id, newStartDate);
             }
           }
@@ -682,11 +688,17 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                     if (containerRect) {
                                       const x = dropEvent.clientX - containerRect.left + (containerRef.current?.scrollLeft || 0);
                                       
-                                      // Since containerRef is the timeline area (after backlog), we don't need to subtract backlog width
+                                      // Calculate precise position within the week
                                       const weekIndex = Math.floor(x / weekWidth);
+                                      const weekOffset = (x % weekWidth) / weekWidth; // 0-1 fraction of the week
                                       
                                       if (weekIndex >= 0 && weekIndex < weeks.length) {
-                                        const newStartDate = getDateFromWeekIndex(weekIndex, baseDate);
+                                        // Calculate the precise date within the week
+                                        const weekStart = getDateFromWeekIndex(weekIndex, baseDate);
+                                        const daysOffset = Math.floor(weekOffset * 7); // Convert fraction to days
+                                        const newStartDate = new Date(weekStart);
+                                        newStartDate.setDate(weekStart.getDate() + daysOffset);
+                                        
                                         onWorkItemMove(workItem.id, newStartDate);
                                       }
                                     }
