@@ -65,7 +65,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   }, [openBacklogPopover, isFilterDropdownOpen, isProjectFilterDropdownOpen]);
   const [draggedItem, setDraggedItem] = useState<WorkItem | null>(null);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
-  const [isDragging, setIsDragging] = useState(false);
 
 
   const weeks = getAllWeeksInYear(new Date().getFullYear()); // All 52 weeks of the year
@@ -231,7 +230,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       
       // Add visual feedback
       document.body.style.cursor = 'grabbing';
-      setIsDragging(true); // Set dragging state when actual drag starts
       
       const handleMouseMove = (moveEvent: MouseEvent) => {
         const containerRect = containerRef.current?.getBoundingClientRect();
@@ -256,7 +254,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         document.removeEventListener('mouseup', handleMouseUp);
         document.body.style.cursor = '';
         setDraggedItem(null);
-        setIsDragging(false);
       };
       
       document.addEventListener('mousemove', handleMouseMove);
@@ -266,7 +263,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     
     // If it's a drag event (backlog items), use HTML5 drag and drop
     const dragEvent = e as React.DragEvent;
-    setIsDragging(true); // Set dragging state for HTML5 drag
     try {
       dragEvent.dataTransfer.setData('text/plain', workItem.id);
       dragEvent.dataTransfer.effectAllowed = 'move';
@@ -304,7 +300,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     }
     
     setDraggedItem(null);
-    setIsDragging(false);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -334,9 +329,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
 
 
-  // Auto-scroll to current date on component mount (only when not dragging)
+  // Auto-scroll to current date on component mount only
   useEffect(() => {
-    if (containerRef.current && !isDragging) {
+    if (containerRef.current) {
       const currentDate = new Date();
       const currentWeekIndex = getWeekIndex(currentDate, baseDate);
       
@@ -348,12 +343,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
         });
       }
     }
-  }, [baseDate, weeks.length, weekWidth, viewportWidth]); // Remove isDragging dependency to prevent re-triggering
+  }, []); // Only run on mount
 
   // Cleanup dragging state on unmount
   useEffect(() => {
     return () => {
-      setIsDragging(false);
       setDraggedItem(null);
     };
   }, []);
@@ -516,6 +510,30 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Go to Today's Date Button */}
+            <button
+              onClick={() => {
+                if (containerRef.current) {
+                  const currentDate = new Date();
+                  const currentWeekIndex = getWeekIndex(currentDate, baseDate);
+                  
+                  if (currentWeekIndex >= 0 && currentWeekIndex < weeks.length) {
+                    const scrollX = currentWeekIndex * weekWidth - (viewportWidth - backlogColumnWidth) / 2;
+                    containerRef.current.scrollTo({
+                      left: Math.max(0, scrollX),
+                      behavior: 'smooth'
+                    });
+                  }
+                }
+              }}
+              className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white hover:bg-gray-50 transition-colors"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Go to Today
+            </button>
           </div>
         </div>
       </div>
