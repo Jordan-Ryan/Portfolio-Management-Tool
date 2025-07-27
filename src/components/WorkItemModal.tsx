@@ -224,9 +224,9 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
             </div>
             
             {/* Predecessors */}
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-600 mb-2">Predecessors:</h4>
-              {selectedDependencies.length > 0 ? (
+            {selectedDependencies.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium text-gray-600 mb-2">Predecessors:</h4>
                 <div className="space-y-2">
                   {selectedDependencies.map(depId => {
                     const depItem = allWorkItems.find(item => item.id === depId);
@@ -244,7 +244,16 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                           <span className="text-xs text-gray-400">ID: {depItem.id}</span>
                         </div>
                         <button
-                          onClick={() => setSelectedDependencies(prev => prev.filter(id => id !== depId))}
+                          onClick={() => {
+                            // Remove from predecessors
+                            setSelectedDependencies(prev => prev.filter(id => id !== depId));
+                            // Also remove this work item from the predecessor's successors
+                            const updatedDepItem = {
+                              ...depItem,
+                              successors: depItem.successors?.filter(id => id !== workItem.id) || []
+                            };
+                            onSave(updatedDepItem);
+                          }}
                           className="text-red-600 hover:text-red-800 text-sm"
                         >
                           Remove
@@ -253,19 +262,15 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                     );
                   })}
                 </div>
-              ) : (
-                <div className="text-sm text-gray-500 italic py-2">
-                  No predecessors
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Successors */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-600 mb-2">Successors:</h4>
-              {workItem.successors && workItem.successors.length > 0 ? (
+            {(formData.successors && formData.successors.length > 0) && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-600 mb-2">Successors:</h4>
                 <div className="space-y-2">
-                  {workItem.successors.map(succId => {
+                  {formData.successors.map(succId => {
                     const succItem = allWorkItems.find(item => item.id === succId);
                     if (!succItem) return null;
                     const succProject = projects.find(p => p.id === succItem.projectId);
@@ -282,9 +287,15 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                         </div>
                         <button
                           onClick={() => {
-                            // Remove this item from the current work item's successors
-                            const updatedSuccessors = workItem.successors.filter(id => id !== succId);
+                            // Remove from successors
+                            const updatedSuccessors = formData.successors?.filter(id => id !== succId) || [];
                             handleInputChange('successors', updatedSuccessors);
+                            // Also remove this work item from the successor's dependencies
+                            const updatedSuccItem = {
+                              ...succItem,
+                              dependencies: succItem.dependencies?.filter(id => id !== workItem.id) || []
+                            };
+                            onSave(updatedSuccItem);
                           }}
                           className="text-red-600 hover:text-red-800 text-sm"
                         >
@@ -294,12 +305,8 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                     );
                   })}
                 </div>
-              ) : (
-                <div className="text-sm text-gray-500 italic py-2">
-                  No successors
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -404,7 +411,7 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                     .filter(item => {
                       if (item.id === workItem.id) return false;
                       if (dependencyType === 'predecessor' && selectedDependencies.includes(item.id)) return false;
-                      if (dependencyType === 'successor' && workItem.successors?.includes(item.id)) return false;
+                      if (dependencyType === 'successor' && formData.successors?.includes(item.id)) return false;
                       
                       const searchLower = dependencySearchTerm.toLowerCase();
                       return item.id.toLowerCase().includes(searchLower) || 
@@ -419,9 +426,21 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                           onClick={() => {
                             if (dependencyType === 'predecessor') {
                               setSelectedDependencies(prev => [...prev, item.id]);
+                              // Also add this work item to the predecessor's successors
+                              const updatedDepItem = {
+                                ...item,
+                                successors: [...(item.successors || []), workItem.id]
+                              };
+                              onSave(updatedDepItem);
                             } else {
-                              const updatedSuccessors = [...(workItem.successors || []), item.id];
+                              const updatedSuccessors = [...(formData.successors || []), item.id];
                               handleInputChange('successors', updatedSuccessors);
+                              // Also add this work item to the successor's dependencies
+                              const updatedSuccItem = {
+                                ...item,
+                                dependencies: [...(item.dependencies || []), workItem.id]
+                              };
+                              onSave(updatedSuccItem);
                             }
                             setIsAddDependencyOpen(false);
                             setDependencySearchTerm('');
@@ -445,15 +464,15 @@ export const WorkItemModal: React.FC<WorkItemModalProps> = ({
                         </div>
                       );
                     })}
-                  {allWorkItems.filter(item => {
-                    if (item.id === workItem.id) return false;
-                    if (dependencyType === 'predecessor' && selectedDependencies.includes(item.id)) return false;
-                    if (dependencyType === 'successor' && workItem.successors?.includes(item.id)) return false;
-                    
-                    const searchLower = dependencySearchTerm.toLowerCase();
-                    return item.id.toLowerCase().includes(searchLower) || 
-                           item.name.toLowerCase().includes(searchLower);
-                  }).length === 0 && (
+                                     {allWorkItems.filter(item => {
+                     if (item.id === workItem.id) return false;
+                     if (dependencyType === 'predecessor' && selectedDependencies.includes(item.id)) return false;
+                     if (dependencyType === 'successor' && formData.successors?.includes(item.id)) return false;
+                     
+                     const searchLower = dependencySearchTerm.toLowerCase();
+                     return item.id.toLowerCase().includes(searchLower) || 
+                            item.name.toLowerCase().includes(searchLower);
+                   }).length === 0 && (
                     <div className="p-4 text-sm text-gray-500 text-center">
                       No work items found
                     </div>
