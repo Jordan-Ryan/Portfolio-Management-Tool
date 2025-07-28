@@ -1,5 +1,6 @@
 import { differenceInWeeks, addWeeks } from 'date-fns';
 import { WorkItem, PDTTeam, Alert, CapacityData } from '../types';
+import { calculatePartialWeekCapacity } from './dateUtils';
 
 export const calculateProgressDelay = (workItem: WorkItem): boolean => {
   if (!workItem.startDate || !workItem.endDate) return false;
@@ -76,7 +77,17 @@ export const calculateCapacityForWeek = (
       item.startDate < weekEnd &&
       item.endDate > weekStart
     )
-    .reduce((sum, item) => sum + item.capacity, 0);
+    .reduce((sum, item) => {
+      // Calculate partial week capacity based on start/end dates
+      const partialCapacity = calculatePartialWeekCapacity(
+        item.startDate!,
+        item.endDate!,
+        weekStart,
+        weekEnd,
+        item.capacity
+      );
+      return sum + partialCapacity;
+    }, 0);
   
   return {
     pdtTeamId,

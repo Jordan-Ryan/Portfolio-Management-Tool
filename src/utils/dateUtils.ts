@@ -1,8 +1,14 @@
-import { addWeeks, differenceInWeeks, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
+import { addWeeks, differenceInWeeks, startOfWeek, endOfWeek, isWithinInterval, addDays, differenceInDays, getDay } from 'date-fns';
 
 export const getWeekRange = (date: Date) => {
   const start = startOfWeek(date, { weekStartsOn: 1 }); // Monday start
   const end = endOfWeek(date, { weekStartsOn: 1 });
+  return { start, end };
+};
+
+export const getWorkWeekRange = (date: Date) => {
+  const start = startOfWeek(date, { weekStartsOn: 1 }); // Monday start
+  const end = addDays(start, 4); // Friday end (Monday + 4 days)
   return { start, end };
 };
 
@@ -22,8 +28,30 @@ export const getWeekOffset = (date: Date) => {
   return daysDiff / 7;
 };
 
+export const getWorkWeekOffset = (date: Date) => {
+  // Get the start of the work week (Monday) for the given date
+  const { start: weekStart } = getWorkWeekRange(date);
+  // Calculate how many work days into the week the date is (0-4 for Monday-Friday)
+  const daysDiff = Math.floor((date.getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000));
+  // Return the offset as a fraction of the work week (0-1)
+  return Math.min(1, Math.max(0, daysDiff / 5));
+};
+
+export const getTodayPosition = (baseDate: Date) => {
+  const today = new Date();
+  const weekIndex = getWeekIndex(today, baseDate);
+  const weekOffset = getWorkWeekOffset(today);
+  return { weekIndex, weekOffset };
+};
+
 export const getDateFromWeekIndex = (weekIndex: number, baseDate: Date) => {
   return addWeeks(baseDate, weekIndex);
+};
+
+export const getDateFromWeekIndexAndOffset = (weekIndex: number, weekOffset: number, baseDate: Date) => {
+  const weekStart = addWeeks(baseDate, weekIndex);
+  const daysOffset = Math.floor(weekOffset * 5); // 5 work days per week
+  return addDays(weekStart, daysOffset);
 };
 
 export interface WeekInfo {
@@ -100,4 +128,25 @@ export const formatDate = (date: Date) => {
 
 export const formatWeekRange = (startDate: Date, endDate: Date) => {
   return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+};
+
+// Helper function to calculate partial week capacity
+export const calculatePartialWeekCapacity = (startDate: Date, endDate: Date, weekStart: Date, weekEnd: Date, totalCapacity: number): number => {
+  // If the work item doesn't overlap with this week, return 0
+  if (endDate <= weekStart || startDate >= weekEnd) {
+    return 0;
+  }
+  
+  // Calculate the overlap period
+  const overlapStart = new Date(Math.max(startDate.getTime(), weekStart.getTime()));
+  const overlapEnd = new Date(Math.min(endDate.getTime(), weekEnd.getTime()));
+  
+  // Calculate work days in the overlap period
+  const totalDays = differenceInDays(overlapEnd, overlapStart) + 1;
+  const workDays = Math.max(0, Math.min(5, totalDays)); // Cap at 5 work days per week
+  
+  // Calculate capacity as a fraction of the week
+  const capacityFraction = workDays / 5;
+  
+  return totalCapacity * capacityFraction;
 }; 

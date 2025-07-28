@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { WorkItem, Project, PDTTeam } from '../types';
 import { TimelineBar } from './TimelineBar';
-import { getAllWeeksInYear, getWeekIndex, getDateFromWeekIndex, getWeekOffset } from '../utils/dateUtils';
+import { getAllWeeksInYear, getWeekIndex, getDateFromWeekIndex, getWeekOffset, getTodayPosition, getDateFromWeekIndexAndOffset } from '../utils/dateUtils';
 import { getWorkItemsByProject, sortWorkItemsByPDTAndRow, checkDependencyConflict, getDependencyConflictDetails, calculateProgressDelay, getProgressDelayDetails } from '../utils/calculations';
 
 interface TimelineViewProps {
@@ -292,11 +292,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
             const weekOffset = (x % weekWidth) / weekWidth; // 0-1 fraction of the week
             
             if (weekIndex >= 0 && weekIndex < weeks.length) {
-              // Calculate the precise date within the week
-              const weekStart = getDateFromWeekIndex(weekIndex, baseDate);
-              const daysOffset = Math.floor(weekOffset * 7); // Convert fraction to days
-              const newStartDate = new Date(weekStart);
-              newStartDate.setDate(weekStart.getDate() + daysOffset);
+              // Calculate the precise date within the work week
+              const newStartDate = getDateFromWeekIndexAndOffset(weekIndex, weekOffset, baseDate);
               
               onWorkItemMove(workItem.id, newStartDate);
             }
@@ -359,11 +356,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     // Check if drop is in the timeline area (not in backlog area) and within valid weeks
     // Also prevent dropping beyond the timeline bounds
     if (x > backlogColumnWidth && weekIndex >= 0 && weekIndex < weeks.length) {
-      // Calculate the precise date within the week
-      const weekStart = getDateFromWeekIndex(weekIndex, baseDate);
-      const daysOffset = Math.floor(weekOffset * 7); // Convert fraction to days
-      const newStartDate = new Date(weekStart);
-      newStartDate.setDate(weekStart.getDate() + daysOffset);
+      // Calculate the precise date within the work week
+      const newStartDate = getDateFromWeekIndexAndOffset(weekIndex, weekOffset, baseDate);
       
       onWorkItemMove(draggedItem.id, newStartDate);
     }
@@ -782,11 +776,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                                       const weekOffset = (x % weekWidth) / weekWidth; // 0-1 fraction of the week
                                       
                                       if (weekIndex >= 0 && weekIndex < weeks.length) {
-                                        // Calculate the precise date within the week
-                                        const weekStart = getDateFromWeekIndex(weekIndex, baseDate);
-                                        const daysOffset = Math.floor(weekOffset * 7); // Convert fraction to days
-                                        const newStartDate = new Date(weekStart);
-                                        newStartDate.setDate(weekStart.getDate() + daysOffset);
+                                        // Calculate the precise date within the work week
+                                        const newStartDate = getDateFromWeekIndexAndOffset(weekIndex, weekOffset, baseDate);
                                         
                                         onWorkItemMove(workItem.id, newStartDate);
                                       }
@@ -986,11 +977,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
             
             {/* Current date line in header */}
             {(() => {
-              const currentDate = new Date();
-              const currentWeekIndex = getWeekIndex(currentDate, baseDate);
+              const { weekIndex, weekOffset } = getTodayPosition(baseDate);
               
-              if (currentWeekIndex >= 0 && currentWeekIndex < weeks.length) {
-                const lineX = currentWeekIndex * weekWidth + weekWidth / 2;
+              if (weekIndex >= 0 && weekIndex < weeks.length) {
+                const lineX = weekIndex * weekWidth + (weekOffset * weekWidth);
                 return (
                   <line
                     x1={lineX}
@@ -1022,11 +1012,10 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           
                       {/* Current date line in main content */}
             {(() => {
-              const currentDate = new Date();
-              const currentWeekIndex = getWeekIndex(currentDate, baseDate);
+              const { weekIndex, weekOffset } = getTodayPosition(baseDate);
               
-              if (currentWeekIndex >= 0 && currentWeekIndex < weeks.length) {
-                const lineX = currentWeekIndex * weekWidth + weekWidth / 2;
+              if (weekIndex >= 0 && weekIndex < weeks.length) {
+                const lineX = weekIndex * weekWidth + (weekOffset * weekWidth);
                 return (
                   <line
                     x1={lineX}

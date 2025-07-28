@@ -101,7 +101,8 @@ The Project Roadmap provides an interactive timeline view of all projects and th
 **Moving Work Items:**
 1. **Drag and drop** work items to new positions on the timeline
 2. Hold for 1 second to activate drag mode
-3. Drop on the desired week to reposition
+3. Drop on the desired position within a work week (Monday-Friday)
+4. **Work Week Precision**: Items can be positioned to specific work days within each week
 
 **Alert System:**
 - Click the ⚠️ icon on work items to view detailed alerts
@@ -152,6 +153,8 @@ The PDT Team Capacity page provides detailed capacity planning and monitoring.
 
 #### **Capacity Management**
 - **Percentage-based**: Capacity is shown as percentages (e.g., 80% max)
+- **Partial Week Support**: Capacity calculations consider start/end dates within weeks
+- **Work Week Focus**: Only Monday-Friday work days are considered for capacity
 - **Weekly Tracking**: Monitor capacity changes week by week
 - **Visual Indicators**: Color-coded cells for quick assessment
 

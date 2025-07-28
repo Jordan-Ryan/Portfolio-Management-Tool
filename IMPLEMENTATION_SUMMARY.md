@@ -16,6 +16,8 @@ Successfully implemented a comprehensive dynamic roadmap tool for managing proje
 
 ### 2. PDT Work Items & Timeline
 - **Timeline Visualization**: Work items as bars on chronological timeline
+- **Work Week Precision**: Items can be positioned to specific work days (Monday-Friday)
+- **Today Line**: Accurate positioning relative to current date and work week
 - **Progress Tracking**: Visual progress indicators with percentage completion
 - **Capacity Display**: FTE allocation and duration shown on each bar
 - **Team Assignment**: Each work item associated with specific PDT team
@@ -49,6 +51,8 @@ Successfully implemented a comprehensive dynamic roadmap tool for managing proje
 ### 7. Capacity Management
 - **12-Week Rolling View**: Capacity table showing next 12 weeks
 - **Team Utilization**: Percentage utilization per team per week
+- **Partial Week Support**: Capacity calculations consider start/end dates within weeks
+- **Work Week Focus**: Only Monday-Friday work days are considered for capacity
 - **Over-capacity Alerts**: Visual indicators for capacity overflow
 - **Interactive Filtering**: Click teams to filter roadmap view
 - **Capacity Calculations**: Automatic weekly capacity calculations
