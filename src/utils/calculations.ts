@@ -87,6 +87,7 @@ export const calculateCapacityForWeek = (
       workWeekEnd,
       item.capacity
     );
+    
     return sum + partialCapacity;
   }, 0);
   
