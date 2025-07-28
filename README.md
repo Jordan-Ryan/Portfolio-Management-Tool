@@ -335,22 +335,28 @@ npm run type-check
 
 ## 🌐 Deployment
 
-### GitHub Pages Deployment
+### Automatic GitHub Pages Deployment
 The application is automatically deployed to GitHub Pages via GitHub Actions.
 
 **Deployment Process:**
-1. Code is pushed to the `main` branch
-2. GitHub Actions workflow triggers
-3. Application is built and deployed to GitHub Pages
-4. Available at: https://jordan-ryan.github.io/Portfolio-Management-Tool/
+1. **Push to `main` branch** - Any changes pushed to the main branch
+2. **GitHub Actions triggers** - Automatic build and deployment workflow
+3. **Build and deploy** - Application is built and deployed to GitHub Pages
+4. **Live at**: https://jordan-ryan.github.io/Portfolio-Management-Tool/
 
-### Manual Deployment
+**No manual deployment needed!** Just push your changes to `main` and they'll be live within minutes.
+
+### Development Workflow
 ```bash
-# Build the application
-npm run build
+# Make your changes locally
+npm run dev
 
-# Deploy to GitHub Pages
-npm run deploy
+# Commit and push to main
+git add .
+git commit -m "Your changes"
+git push origin main
+
+# That's it! GitHub Actions will deploy automatically
 ```
 
 ## 📝 Version History
