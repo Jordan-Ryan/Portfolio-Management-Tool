@@ -133,11 +133,11 @@ export const formatWeekRange = (startDate: Date, endDate: Date) => {
 // Helper function to calculate partial week capacity
 export const calculatePartialWeekCapacity = (startDate: Date, endDate: Date, weekStart: Date, weekEnd: Date, totalCapacity: number): number => {
   // If the work item doesn't overlap with this week, return 0
-  if (endDate <= weekStart || startDate >= weekEnd) {
+  if (endDate < weekStart || startDate > weekEnd) {
     return 0;
   }
   
-  // Calculate the overlap period
+  // Calculate the overlap period - include the start date
   const overlapStart = new Date(Math.max(startDate.getTime(), weekStart.getTime()));
   const overlapEnd = new Date(Math.min(endDate.getTime(), weekEnd.getTime()));
   
@@ -145,6 +145,7 @@ export const calculatePartialWeekCapacity = (startDate: Date, endDate: Date, wee
   let workDays = 0;
   const currentDate = new Date(overlapStart);
   
+  // Include the end date in the calculation
   while (currentDate <= overlapEnd) {
     const dayOfWeek = currentDate.getDay();
     // Monday = 1, Tuesday = 2, Wednesday = 3, Thursday = 4, Friday = 5
