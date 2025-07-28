@@ -40,7 +40,8 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
 
   const getCapacityPercentage = (pdtTeam: PDTTeam, weekIndex: number) => {
     const capacityData = calculateCapacityForWeek(pdtTeam.id, weekIndex, workItems, baseDate);
-    return (capacityData.capacityUsed / pdtTeam.maxCapacity) * 100;
+    // capacityUsed is already a percentage, so we just need to return it directly
+    return capacityData.capacityUsed;
   };
 
   const getCellColor = (percentage: number, maxCapacity: number) => {
