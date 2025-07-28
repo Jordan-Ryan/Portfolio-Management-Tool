@@ -1053,6 +1053,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 let projectStartWeek = 0;
                 let projectEndWeek = 0;
                 let projectDuration = 0;
+                let projectStartOffset = 0;
+                let projectEndOffset = 0;
                 
                 if (itemsWithDates.length > 0) {
                   // Normalize dates to remove time components for consistent comparison
@@ -1063,16 +1065,30 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                   const projectStartDate = new Date(Math.min(...startDates.map(d => d.getTime())));
                   const projectEndDate = new Date(Math.max(...endDates.map(d => d.getTime())));
                   
+                  // Calculate project positioning using the same precise method as work items
                   projectStartWeek = getWeekIndex(projectStartDate, baseDate);
                   projectEndWeek = getWeekIndex(projectEndDate, baseDate);
-                  projectDuration = projectEndWeek - projectStartWeek + 1;
+                  projectStartOffset = getWeekOffset(projectStartDate);
+                  projectEndOffset = getWeekOffset(projectEndDate);
+                  
+                  // Calculate project width using the same logic as work items
+                  if (projectStartWeek === projectEndWeek) {
+                    // Same week - calculate partial width
+                    projectDuration = (projectEndOffset - projectStartOffset);
+                  } else {
+                    // Different weeks - calculate full weeks plus partial weeks
+                    const fullWeeks = projectEndWeek - projectStartWeek - 1;
+                    const startWeekWidth = (1 - projectStartOffset);
+                    const endWeekWidth = projectEndOffset;
+                    projectDuration = startWeekWidth + fullWeeks + endWeekWidth;
+                  }
                 }
                 
                 return (
                   <g key={group.project.id}>
                     {/* Project bar that spans the timeline */}
                     {itemsWithDates.length > 0 && (
-                      <g transform={`translate(${projectStartWeek * weekWidth}, ${projectY})`}>
+                      <g transform={`translate(${(projectStartWeek + projectStartOffset) * weekWidth}, ${projectY})`}>
                         {/* Project background bar */}
                         <rect
                           width={projectDuration * weekWidth}
