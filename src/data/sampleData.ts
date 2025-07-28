@@ -8,25 +8,29 @@ export const sampleProjects: Project[] = [
     id: 'proj-1',
     name: 'E-commerce Platform Redesign',
     priority: 95,
-    color: '#3b82f6'
+    color: '#3b82f6',
+    startDate: subWeeks(currentDate, 4)
   },
   {
     id: 'proj-2',
     name: 'Mobile App Development',
     priority: 88,
-    color: '#10b981'
+    color: '#10b981',
+    startDate: subWeeks(currentDate, 6)
   },
   {
     id: 'proj-3',
     name: 'Data Analytics Dashboard',
     priority: 75,
-    color: '#f59e0b'
+    color: '#f59e0b',
+    startDate: subWeeks(currentDate, 5)
   },
   {
     id: 'proj-4',
     name: 'API Gateway Migration',
     priority: 65,
-    color: '#8b5cf6'
+    color: '#8b5cf6',
+    startDate: subWeeks(currentDate, 8)
   }
 ];
 

@@ -32,6 +32,8 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   const [openBacklogPopover, setOpenBacklogPopover] = useState<string | null>(null);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [isProjectFilterDropdownOpen, setIsProjectFilterDropdownOpen] = useState(false);
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<'priority' | 'startDate'>('priority');
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -55,6 +57,9 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       }
       if (isProjectFilterDropdownOpen && !target.closest('[data-project-filter-dropdown]')) {
         setIsProjectFilterDropdownOpen(false);
+      }
+      if (isSortDropdownOpen && !target.closest('[data-sort-dropdown]')) {
+        setIsSortDropdownOpen(false);
       }
     };
 
@@ -87,9 +92,44 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
     return isInBacklog && matchesPDT && matchesProject;
   });
 
+  // Helper function to get the earliest start date for a project based on filtered work items
+  const getProjectEarliestStartDate = (projectId: string): Date | null => {
+    const projectWorkItems = getWorkItemsByProject(filteredWorkItems, projectId);
+    const scheduledItems = projectWorkItems.filter(item => item.startDate && !item.isInBacklog);
+    
+    if (scheduledItems.length === 0) {
+      // If no scheduled items in filtered view, fall back to project start date
+      const project = projects.find(p => p.id === projectId);
+      return project?.startDate || null;
+    }
+    
+    // Find the earliest start date among filtered work items
+    const earliestDate = scheduledItems.reduce((earliest, item) => {
+      if (!earliest || (item.startDate && item.startDate < earliest)) {
+        return item.startDate || null;
+      }
+      return earliest;
+    }, null as Date | null);
+    
+    return earliestDate;
+  };
+
   // Group work items by project
   const projectGroups = projects
-    .sort((a, b) => b.priority - a.priority)
+    .sort((a, b) => {
+      if (sortBy === 'priority') {
+        return b.priority - a.priority;
+      } else {
+        // Sort by start date based on filtered work items
+        const aEarliestDate = getProjectEarliestStartDate(a.id);
+        const bEarliestDate = getProjectEarliestStartDate(b.id);
+        
+        if (!aEarliestDate && !bEarliestDate) return 0;
+        if (!aEarliestDate) return 1;
+        if (!bEarliestDate) return -1;
+        return aEarliestDate.getTime() - bEarliestDate.getTime();
+      }
+    })
     .map(project => ({
       project,
       items: sortWorkItemsByPDTAndRow(
@@ -538,6 +578,55 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                           </button>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sort Projects Dropdown */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700">
+                Sort by:
+              </label>
+              <div className="relative" data-sort-dropdown>
+                <button
+                  onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                  className="flex items-center justify-between w-48 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <span className="truncate">
+                    {sortBy === 'priority' ? 'Priority (High to Low)' : 'Start Date (Earliest First)'}
+                  </span>
+                  <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isSortDropdownOpen && (
+                  <div className="absolute z-50 mt-1 w-48 bg-white border border-gray-300 rounded-md shadow-lg">
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          setSortBy('priority');
+                          setIsSortDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-2 py-2 text-sm rounded hover:bg-gray-50 ${
+                          sortBy === 'priority' ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                        }`}
+                      >
+                        Priority (High to Low)
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortBy('startDate');
+                          setIsSortDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-2 py-2 text-sm rounded hover:bg-gray-50 ${
+                          sortBy === 'startDate' ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                        }`}
+                      >
+                        Start Date (Earliest First)
+                      </button>
                     </div>
                   </div>
                 )}

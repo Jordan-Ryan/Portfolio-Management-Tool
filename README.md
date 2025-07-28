@@ -123,6 +123,14 @@ The Project Roadmap provides an interactive timeline view of all projects and th
 2. Select multiple projects to filter by
 3. Use "Clear Filter" to remove all filters
 
+**Project Sorting:**
+1. Click the "Sort by" dropdown in the top toolbar
+2. Choose between:
+   - **Priority (High to Low)**: Sort projects by priority score (default)
+   - **Start Date (Earliest First)**: Sort projects by the earliest start date of work items
+3. **Context-Aware Sorting**: When filtering by PDT teams, date sorting considers only work items from the filtered teams
+4. The sorting applies to both timeline and backlog views
+
 #### **Project Expansion**
 - Click the expand/collapse arrow next to project names
 - Expanded projects show:

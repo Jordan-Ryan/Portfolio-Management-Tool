@@ -3,6 +3,7 @@ export interface Project {
   name: string;
   priority: number;
   color: string;
+  startDate?: Date;
 }
 
 export interface PDTTeam {

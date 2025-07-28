@@ -8,9 +8,11 @@ Successfully implemented a comprehensive dynamic roadmap tool for managing proje
 
 ### 1. Project Management & Organization
 - **Visual Project Grouping**: Projects displayed on timeline with distinct colors
-- **Priority-based Sorting**: Automatic sorting by highest priority score
+- **Flexible Sorting Options**: Sort by priority (high to low) or start date (earliest first)
+- **Context-Aware Date Sorting**: When filtering by PDT teams, date sorting considers only work items from filtered teams
 - **Editable Priority System**: Configurable priority scores for each project
 - **Color-coded Projects**: Visual distinction with custom project colors
+- **Project Start Dates**: Track when projects begin for chronological sorting
 
 ### 2. PDT Work Items & Timeline
 - **Timeline Visualization**: Work items as bars on chronological timeline
@@ -83,7 +85,7 @@ src/
 ```
 
 ### Data Models
-- **Project**: ID, name, priority, color
+- **Project**: ID, name, priority, color, startDate
 - **PDTTeam**: ID, name, max capacity, color
 - **WorkItem**: ID, name, project, team, dates, duration, capacity, progress, dependencies
 - **Alert**: ID, type, severity, message, associated items
