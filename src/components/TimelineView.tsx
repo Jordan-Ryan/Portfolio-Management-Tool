@@ -1055,8 +1055,11 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 let projectDuration = 0;
                 
                 if (itemsWithDates.length > 0) {
-                  const startDates = itemsWithDates.map(item => item.startDate!);
-                  const endDates = itemsWithDates.map(item => item.endDate!);
+                  // Normalize dates to remove time components for consistent comparison
+                  const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                  
+                  const startDates = itemsWithDates.map(item => normalizeDate(item.startDate!));
+                  const endDates = itemsWithDates.map(item => normalizeDate(item.endDate!));
                   const projectStartDate = new Date(Math.min(...startDates.map(d => d.getTime())));
                   const projectEndDate = new Date(Math.max(...endDates.map(d => d.getTime())));
                   
@@ -1195,10 +1198,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                             const pdtTeam = getPDTTeam(workItem.pdtTeamId);
                             if (!workItem.startDate || !workItem.endDate) return null;
                             
-                            const startWeek = getWeekIndex(workItem.startDate, baseDate);
-                            const endWeek = getWeekIndex(workItem.endDate, baseDate);
-                            const startOffset = getWeekOffset(workItem.startDate);
-                            const endOffset = getWeekOffset(workItem.endDate);
+                            // Normalize dates to remove time components for consistent calculation
+                            const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                            const normalizedStartDate = normalizeDate(workItem.startDate);
+                            const normalizedEndDate = normalizeDate(workItem.endDate);
+                            
+                            const startWeek = getWeekIndex(normalizedStartDate, baseDate);
+                            const endWeek = getWeekIndex(normalizedEndDate, baseDate);
+                            const startOffset = getWeekOffset(normalizedStartDate);
+                            const endOffset = getWeekOffset(normalizedEndDate);
                             
                             // Calculate precise positioning within weeks
                             const x = (startWeek + startOffset) * weekWidth;
@@ -1349,10 +1357,15 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           // For timeline items, use the existing logic
           if (!workItem.startDate || !workItem.endDate) return null;
           
-          const startWeek = getWeekIndex(workItem.startDate, baseDate);
-          const endWeek = getWeekIndex(workItem.endDate, baseDate);
-          const startOffset = getWeekOffset(workItem.startDate);
-          const endOffset = getWeekOffset(workItem.endDate);
+          // Normalize dates to remove time components for consistent calculation
+          const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          const normalizedStartDate = normalizeDate(workItem.startDate);
+          const normalizedEndDate = normalizeDate(workItem.endDate);
+          
+          const startWeek = getWeekIndex(normalizedStartDate, baseDate);
+          const endWeek = getWeekIndex(normalizedEndDate, baseDate);
+          const startOffset = getWeekOffset(normalizedStartDate);
+          const endOffset = getWeekOffset(normalizedEndDate);
           
           // Calculate precise width for ghost item
           let width;
