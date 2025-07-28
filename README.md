@@ -155,6 +155,9 @@ The PDT Team Capacity page provides detailed capacity planning and monitoring.
 - **Percentage-based**: Capacity is shown as percentages (e.g., 80% max)
 - **Partial Week Support**: Capacity calculations consider start/end dates within weeks
 - **Work Week Focus**: Only Monday-Friday work days are considered for capacity
+- **Precise Calculations**: 
+  - 100% for 3 work days = 60% of week capacity
+  - 60% for 4 work days = 48% of week capacity
 - **Weekly Tracking**: Monitor capacity changes week by week
 - **Visual Indicators**: Color-coded cells for quick assessment
 

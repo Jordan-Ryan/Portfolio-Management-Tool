@@ -141,11 +141,20 @@ export const calculatePartialWeekCapacity = (startDate: Date, endDate: Date, wee
   const overlapStart = new Date(Math.max(startDate.getTime(), weekStart.getTime()));
   const overlapEnd = new Date(Math.min(endDate.getTime(), weekEnd.getTime()));
   
-  // Calculate work days in the overlap period
-  const totalDays = differenceInDays(overlapEnd, overlapStart) + 1;
-  const workDays = Math.max(0, Math.min(5, totalDays)); // Cap at 5 work days per week
+  // Calculate work days in the overlap period (Monday-Friday only)
+  let workDays = 0;
+  const currentDate = new Date(overlapStart);
   
-  // Calculate capacity as a fraction of the week
+  while (currentDate <= overlapEnd) {
+    const dayOfWeek = currentDate.getDay();
+    // Monday = 1, Tuesday = 2, Wednesday = 3, Thursday = 4, Friday = 5
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      workDays++;
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  // Calculate capacity as a fraction of the work week (5 days)
   const capacityFraction = workDays / 5;
   
   return totalCapacity * capacityFraction;

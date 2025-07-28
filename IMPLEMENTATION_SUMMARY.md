@@ -53,6 +53,9 @@ Successfully implemented a comprehensive dynamic roadmap tool for managing proje
 - **Team Utilization**: Percentage utilization per team per week
 - **Partial Week Support**: Capacity calculations consider start/end dates within weeks
 - **Work Week Focus**: Only Monday-Friday work days are considered for capacity
+- **Precise Calculations**: 
+  - 100% for 3 work days = 60% of week capacity
+  - 60% for 4 work days = 48% of week capacity
 - **Over-capacity Alerts**: Visual indicators for capacity overflow
 - **Interactive Filtering**: Click teams to filter roadmap view
 - **Capacity Calculations**: Automatic weekly capacity calculations
