@@ -1,7 +1,7 @@
-import React, { useRef, useEffect } from 'react';
-import { PDTTeam, WorkItem } from '../types';
-import { calculateCapacityForWeek } from '../utils/calculations';
-import { getAllWeeksInYear, getWeekIndex } from '../utils/dateUtils';
+import React, { useRef, useEffect, useState } from 'react';
+import { PDTTeam, WorkItem, CapacityData } from '../types';
+import { calculateCapacityForWeek, getCapacityPercentage } from '../utils/calculations';
+import { getAllWeeksInYear, getWeekIndex, getWorkWeekRange, getTodayPosition } from '../utils/dateUtils';
 
 interface CapacityTableProps {
   pdtTeams: PDTTeam[];
@@ -9,6 +9,149 @@ interface CapacityTableProps {
   selectedPDTFilter: string[];
   onPDTFilterChange: (pdtTeamIds: string[]) => void;
 }
+
+interface CapacityBreakdownModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  pdtTeam: PDTTeam;
+  weekIndex: number;
+  workItems: WorkItem[];
+  baseDate: Date;
+}
+
+const CapacityBreakdownModal: React.FC<CapacityBreakdownModalProps> = ({
+  isOpen,
+  onClose,
+  pdtTeam,
+  weekIndex,
+  workItems,
+  baseDate
+}) => {
+  if (!isOpen) return null;
+
+  // Get work items for this PDT team and week
+  const weekStart = new Date(baseDate);
+  weekStart.setDate(weekStart.getDate() + (weekIndex * 7));
+  
+  // Use the same week boundaries as the table (getWorkWeekRange)
+  const { start: workWeekStart, end: workWeekEnd } = getWorkWeekRange(weekStart);
+
+  const relevantWorkItems = workItems.filter(item => 
+    item.pdtTeamId === pdtTeam.id &&
+    item.startDate &&
+    item.endDate &&
+    item.startDate <= workWeekEnd &&
+    item.endDate >= workWeekStart
+  );
+
+  // Calculate breakdown for each work item
+  const breakdownItems = relevantWorkItems.map(item => {
+    // Normalize all dates to remove time components
+    const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const normalizedStartDate = normalizeDate(item.startDate!);
+    const normalizedEndDate = normalizeDate(item.endDate!);
+    const normalizedWeekStart = normalizeDate(workWeekStart);
+    const normalizedWeekEnd = normalizeDate(workWeekEnd);
+
+    // Use the same overlap calculation as the table
+    const overlapStart = new Date(Math.max(normalizedStartDate.getTime(), normalizedWeekStart.getTime()));
+    const overlapEnd = new Date(Math.min(normalizedEndDate.getTime(), normalizedWeekEnd.getTime()));
+
+    // Count work days in overlap (Monday-Friday only)
+    let workDays = 0;
+    const currentDate = new Date(overlapStart);
+    
+    // Use inclusive comparison - include both start and end dates
+    while (currentDate <= overlapEnd) {
+      const dayOfWeek = currentDate.getDay();
+      if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+        workDays++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    // Clamp to max 5
+    workDays = Math.min(workDays, 5);
+    const capacityForWeek = (item.capacity / 5) * workDays;
+    return {
+      workItem: item,
+      workDays,
+      capacityForWeek,
+      startDate: item.startDate!,
+      endDate: item.endDate!
+    };
+  });
+
+  const totalCapacity = breakdownItems.reduce((sum, item) => sum + item.capacityForWeek, 0);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">
+            Capacity Breakdown - {pdtTeam.name}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+        
+        <div className="mb-4">
+          <p className="text-sm text-gray-600">
+            Week {weekIndex + 1} ({workWeekStart.toLocaleDateString()} - {workWeekEnd.toLocaleDateString()})
+          </p>
+          <p className="text-lg font-semibold mt-2">
+            Total Capacity: {totalCapacity.toFixed(1)}%
+          </p>
+        </div>
+
+        {breakdownItems.length === 0 ? (
+          <p className="text-gray-500">No work items in this week</p>
+        ) : (
+          <div className="space-y-3">
+            {breakdownItems.map((item, index) => (
+              <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-blue-600">{item.workItem.name}</h3>
+                  <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                    {item.capacityForWeek.toFixed(1)}%
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Work Days:</span>
+                    <span className="ml-2 font-medium">{item.workDays}/5</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Base Capacity:</span>
+                    <span className="ml-2 font-medium">{item.workItem.capacity}%</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Start Date:</span>
+                    <span className="ml-2 font-medium">{item.startDate.toLocaleDateString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">End Date:</span>
+                    <span className="ml-2 font-medium">{item.endDate.toLocaleDateString()}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-2 text-xs text-gray-500">
+                  Calculation: ({item.workItem.capacity}% ÷ 5) × {item.workDays} = {item.capacityForWeek.toFixed(1)}%
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const CapacityTable: React.FC<CapacityTableProps> = ({
   pdtTeams,
@@ -19,6 +162,7 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const weeks = getAllWeeksInYear(new Date().getFullYear());
   const baseDate = weeks[0].start;
+  const [selectedCell, setSelectedCell] = useState<{ pdtTeam: PDTTeam; weekIndex: number } | null>(null);
 
   // Auto-scroll to current date on component mount
   useEffect(() => {
@@ -36,11 +180,8 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
     }
   }, [baseDate, weeks.length]);
 
-
-
   const getCapacityPercentage = (pdtTeam: PDTTeam, weekIndex: number) => {
     const capacityData = calculateCapacityForWeek(pdtTeam.id, weekIndex, workItems, baseDate);
-    // capacityUsed is already a percentage, so we just need to return it directly
     return capacityData.capacityUsed;
   };
 
@@ -61,11 +202,22 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
     return null;
   };
 
+  const handleCellClick = (pdtTeam: PDTTeam, weekIndex: number) => {
+    setSelectedCell({ pdtTeam, weekIndex });
+  };
+
+  const handleCloseModal = () => {
+    setSelectedCell(null);
+  };
+
+  // Get today's position relative to work week
+  const todayPosition = getTodayPosition(baseDate);
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900">PDT Team Capacity (52 Weeks)</h3>
-        <p className="text-sm text-gray-600 mt-1">Click on a team to filter the roadmap view</p>
+        <p className="text-sm text-gray-600 mt-1">Click on a team to filter the roadmap view, click on a cell to see breakdown</p>
       </div>
       
       <div 
@@ -78,7 +230,9 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
           const currentWeekIndex = getWeekIndex(currentDate, baseDate);
           
           if (currentWeekIndex >= 0 && currentWeekIndex < weeks.length) {
-            const lineX = 300 + currentWeekIndex * 80 + 40; // 200px (PDT Team) + 100px (Max Capacity) + 40px (center of week)
+            // Calculate position based on work week offset (Monday-Friday)
+            const weekOffset = todayPosition.weekOffset; // 0-1 fraction of work week
+            const lineX = 300 + currentWeekIndex * 80 + (weekOffset * 80); // 300px for team name + max capacity + offset within week
             return (
               <div
                 className="absolute top-0 bottom-0 w-0.5 z-0"
@@ -116,6 +270,7 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
               .filter(team => selectedPDTFilter.length === 0 || selectedPDTFilter.includes(team.id))
               .map((team) => {
                 const isSelected = selectedPDTFilter.includes(team.id);
+                
                 return (
                   <tr 
                     key={team.id}
@@ -152,7 +307,14 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
                     const isOverCapacity = percentage > team.maxCapacity;
                     
                     return (
-                      <td key={weekIndex} className="px-2 py-3 text-center border-r border-gray-200">
+                      <td 
+                        key={weekIndex} 
+                        className="px-2 py-3 text-center border-r border-gray-200 cursor-pointer hover:bg-gray-50"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row click
+                          handleCellClick(team, weekIndex);
+                        }}
+                      >
                         <div className={`text-xs font-medium px-2 py-1 rounded border ${getCellColor(percentage, team.maxCapacity)}`}>
                           <div className="font-semibold">{percentage.toFixed(0)}%</div>
                           {overflowText && (
@@ -210,6 +372,17 @@ export const CapacityTable: React.FC<CapacityTableProps> = ({
           </div>
         </div>
       </div>
+
+      {selectedCell && (
+        <CapacityBreakdownModal
+          isOpen={true}
+          onClose={handleCloseModal}
+          pdtTeam={selectedCell.pdtTeam}
+          weekIndex={selectedCell.weekIndex}
+          workItems={workItems}
+          baseDate={baseDate}
+        />
+      )}
     </div>
   );
 }; 

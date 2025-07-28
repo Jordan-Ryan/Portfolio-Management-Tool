@@ -99,6 +99,10 @@ export const calculateCapacityForWeek = (
   };
 };
 
+export const getCapacityPercentage = (capacityData: CapacityData): number => {
+  return capacityData.capacityUsed;
+};
+
 export const generateAlerts = (
   workItems: WorkItem[],
   pdtTeams: PDTTeam[]

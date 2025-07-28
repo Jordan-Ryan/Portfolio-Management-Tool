@@ -132,31 +132,36 @@ export const formatWeekRange = (startDate: Date, endDate: Date) => {
 
 // Helper function to calculate partial week capacity
 export const calculatePartialWeekCapacity = (startDate: Date, endDate: Date, weekStart: Date, weekEnd: Date, totalCapacity: number): number => {
+  // Normalize all dates to remove time components
+  const normalizeDate = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  
+  const normalizedStartDate = normalizeDate(startDate);
+  const normalizedEndDate = normalizeDate(endDate);
+  const normalizedWeekStart = normalizeDate(weekStart);
+  const normalizedWeekEnd = normalizeDate(weekEnd);
+
   // If the work item doesn't overlap with this week, return 0
-  if (endDate < weekStart || startDate > weekEnd) {
+  if (normalizedEndDate < normalizedWeekStart || normalizedStartDate > normalizedWeekEnd) {
     return 0;
   }
-  
-  // Calculate the overlap period - include the start date
-  const overlapStart = new Date(Math.max(startDate.getTime(), weekStart.getTime()));
-  const overlapEnd = new Date(Math.min(endDate.getTime(), weekEnd.getTime()));
-  
+
+  // Calculate the overlap period - include the start and end dates
+  const overlapStart = new Date(Math.max(normalizedStartDate.getTime(), normalizedWeekStart.getTime()));
+  const overlapEnd = new Date(Math.min(normalizedEndDate.getTime(), normalizedWeekEnd.getTime()));
+
   // Calculate work days in the overlap period (Monday-Friday only)
   let workDays = 0;
   const currentDate = new Date(overlapStart);
   
-  // Include the end date in the calculation
+  // Use inclusive comparison - include both start and end dates
   while (currentDate <= overlapEnd) {
     const dayOfWeek = currentDate.getDay();
-    // Monday = 1, Tuesday = 2, Wednesday = 3, Thursday = 4, Friday = 5
     if (dayOfWeek >= 1 && dayOfWeek <= 5) {
       workDays++;
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
-  
-  // Calculate capacity as a fraction of the work week (5 days)
-  const capacityFraction = workDays / 5;
-  
-  return totalCapacity * capacityFraction;
+
+  // Always return partial capacity, even for 5 days
+  return (totalCapacity / 5) * workDays;
 }; 
